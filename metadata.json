@@ -1,0 +1,7 @@
+{
+  "name": "Orça Fácil",
+  "description": "Crie orçamentos profissionais instantaneamente apenas falando. A IA extrai detalhes, gera PDFs e envia via WhatsApp.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
