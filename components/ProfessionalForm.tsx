@@ -2,6 +2,7 @@
 import React, { useState, useRef } from 'react';
 import { ProfessionalData } from '../types';
 import { Save, User, Phone, Mail, FileDigit, MapPin, Image as ImageIcon, X, QrCode, CreditCard, ScrollText } from 'lucide-react';
+import { formatCpfCnpj, formatPhone } from '../services/utils';
 
 interface Props {
   initialData: ProfessionalData | null;
@@ -131,7 +132,7 @@ const ProfessionalForm: React.FC<Props> = ({ initialData, onSave }) => {
             <input 
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
               value={formData.cpf_cnpj}
-              onChange={e => setFormData({ ...formData, cpf_cnpj: e.target.value })}
+              onChange={e => setFormData({ ...formData, cpf_cnpj: formatCpfCnpj(e.target.value) })}
               placeholder="00.000.000/0001-00"
             />
           </div>
@@ -144,7 +145,7 @@ const ProfessionalForm: React.FC<Props> = ({ initialData, onSave }) => {
               required
               className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
               value={formData.telefone_profissional}
-              onChange={e => setFormData({ ...formData, telefone_profissional: e.target.value })}
+              onChange={e => setFormData({ ...formData, telefone_profissional: formatPhone(e.target.value) })}
               placeholder="(00) 00000-0000"
             />
           </div>

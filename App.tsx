@@ -96,8 +96,9 @@ const App: React.FC = () => {
   };
 
   const updateBudget = async (id: string, updates: Partial<Budget>) => {
+    if (!currentUser) return;
     try {
-      await db.updateBudget(id, updates);
+      await db.updateBudget(id, currentUser.id, updates);
       setBudgets(prev => prev.map(b => b.id_orcamento === id ? { ...b, ...updates } : b));
     } catch (e: any) {
       alert(`Erro ao atualizar orçamento: ${e.message}`);
@@ -105,8 +106,9 @@ const App: React.FC = () => {
   };
 
   const updateBudgetStatus = async (id: string, status: BudgetStatus) => {
+    if (!currentUser) return;
     try {
-      await db.updateBudgetStatus(id, status);
+      await db.updateBudgetStatus(id, currentUser.id, status);
       setBudgets(budgets.map(b => b.id_orcamento === id ? { ...b, status_orcamento: status } : b));
     } catch (e: any) {
       alert(`Erro ao atualizar status: ${e.message}`);
@@ -114,9 +116,10 @@ const App: React.FC = () => {
   };
 
   const deleteBudget = async (id: string) => {
+    if (!currentUser) return;
     if (window.confirm('Deseja realmente excluir este orçamento?')) {
       try {
-        await db.deleteBudget(id);
+        await db.deleteBudget(id, currentUser.id);
         setBudgets(budgets.filter(b => b.id_orcamento !== id));
       } catch (e: any) {
         alert(`Erro ao excluir: ${e.message}`);

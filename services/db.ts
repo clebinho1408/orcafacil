@@ -26,6 +26,15 @@ export const db = {
     return data as User;
   },
 
+  resetPassword: async (email: string): Promise<boolean> => {
+    if (!supabase) throw new Error("Supabase não configurado");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin,
+    });
+    if (error) throw error;
+    return true;
+  },
+
   updateProfile: async (userId: string, updates: Partial<User>): Promise<void> => {
     if (!supabase) throw new Error("Supabase não configurado");
     const { error } = await supabase.from('profiles').update(updates).eq('id', userId);
@@ -38,9 +47,14 @@ export const db = {
     if (error) throw new Error(`Erro no banco de dados: ${error.message}`);
   },
 
-  updateBudget: async (id: string, updates: Partial<Budget>): Promise<void> => {
+  updateBudget: async (id: string, userId: string, updates: Partial<Budget>): Promise<void> => {
     if (!supabase) return;
-    const { error } = await supabase.from('budgets').update(updates).eq('id_orcamento', id);
+    const { error } = await supabase
+      .from('budgets')
+      .update(updates)
+      .eq('id_orcamento', id)
+      .eq('user_id', userId); // Reforço de segurança
+    
     if (error) throw new Error(`Erro ao atualizar orçamento: ${error.message}`);
   },
 
@@ -56,15 +70,25 @@ export const db = {
     return (data || []) as Budget[];
   },
 
-  deleteBudget: async (id: string): Promise<void> => {
+  deleteBudget: async (id: string, userId: string): Promise<void> => {
     if (!supabase) return;
-    const { error } = await supabase.from('budgets').delete().eq('id_orcamento', id);
+    const { error } = await supabase
+      .from('budgets')
+      .delete()
+      .eq('id_orcamento', id)
+      .eq('user_id', userId); // Reforço de segurança
+    
     if (error) throw new Error(`Erro ao excluir: ${error.message}`);
   },
 
-  updateBudgetStatus: async (id: string, status: BudgetStatus): Promise<void> => {
+  updateBudgetStatus: async (id: string, userId: string, status: BudgetStatus): Promise<void> => {
     if (!supabase) return;
-    const { error } = await supabase.from('budgets').update({ status_orcamento: status }).eq('id_orcamento', id);
+    const { error } = await supabase
+      .from('budgets')
+      .update({ status_orcamento: status })
+      .eq('id_orcamento', id)
+      .eq('user_id', userId); // Reforço de segurança
+    
     if (error) throw new Error(`Erro ao atualizar status: ${error.message}`);
   }
 };
