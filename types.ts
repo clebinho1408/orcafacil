@@ -73,9 +73,13 @@ export interface Budget {
 }
 
 export interface ExtractedBudget {
-  nome_cliente: string;
-  descricao_servico: string;
-  valor_total: string;
-  observacoes_servico: string;
-  forma_pagamento: string;
+  nome_cliente?: string;
+  telefone_cliente?: string;
+  endereco_cliente?: string;
+  descricao_servico?: string;
+  valor_total?: string;
+  valor_mao_de_obra?: string;
+  valor_material?: string;
+  observacoes_servico?: string;
+  forma_pagamento?: string;
 }

@@ -1,14 +1,27 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// Tenta pegar de várias formas possíveis dependendo do ambiente (Vite, Vercel, etc)
-const supabaseUrl = process.env.SUPABASE_URL || (window as any)._env_?.SUPABASE_URL || (import.meta as any).env?.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || (window as any)._env_?.SUPABASE_ANON_KEY || (import.meta as any).env?.VITE_SUPABASE_ANON_KEY;
+// No navegador, process.env pode não estar definido globalmente. 
+// Tentamos acessar de forma segura.
+const getEnv = (key: string) => {
+  try {
+    return process.env[key] || (window as any).process?.env?.[key] || null;
+  } catch {
+    return null;
+  }
+};
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn("⚠️ ATENÇÃO: Credenciais do Supabase não encontradas. Verifique as variáveis de ambiente.");
-}
+const supabaseUrl = getEnv('SUPABASE_URL');
+const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY');
 
-export const supabase = (supabaseUrl && supabaseAnonKey) 
-  ? createClient(supabaseUrl, supabaseAnonKey) 
+export const isConfigured = !!(supabaseUrl && supabaseAnonKey);
+
+export const supabase = isConfigured 
+  ? createClient(supabaseUrl!, supabaseAnonKey!) 
   : null;
+
+// Exportamos para ajudar no debug do Auth
+export const missingVars = [
+  !supabaseUrl && 'SUPABASE_URL',
+  !supabaseAnonKey && 'SUPABASE_ANON_KEY'
+].filter(Boolean) as string[];

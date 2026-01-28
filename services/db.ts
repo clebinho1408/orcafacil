@@ -1,18 +1,14 @@
 
 import { Budget, User, BudgetStatus } from '../types';
-import { supabase } from './supabase';
-
-// Helper para garantir que o Supabase está configurado antes de cada operação
-const getClient = () => {
-  if (!supabase) {
-    throw new Error("Configuração do Supabase ausente. Verifique SUPABASE_URL e SUPABASE_ANON_KEY.");
-  }
-  return supabase;
-};
+import { supabase, isConfigured } from './supabase';
 
 export const db = {
+  isCloudEnabled: () => isConfigured,
+
   login: async (email: string, pass: string): Promise<User | null> => {
-    const { data, error } = await getClient()
+    if (!supabase) throw new Error("Supabase não configurado");
+    
+    const { data, error } = await supabase
       .from('profiles')
       .select('*')
       .eq('email_profissional', email)
@@ -24,7 +20,9 @@ export const db = {
   },
 
   register: async (user: User): Promise<User | null> => {
-    const { data, error } = await getClient()
+    if (!supabase) throw new Error("Supabase não configurado");
+    
+    const { data, error } = await supabase
       .from('profiles')
       .insert([user])
       .select()
@@ -35,32 +33,19 @@ export const db = {
   },
 
   updateProfile: async (userId: string, updates: Partial<User>): Promise<void> => {
-    await getClient()
-      .from('profiles')
-      .update(updates)
-      .eq('id', userId);
+    if (!supabase) throw new Error("Supabase não configurado");
+    await supabase.from('profiles').update(updates).eq('id', userId);
   },
 
   saveBudget: async (budget: Budget): Promise<void> => {
-    const { error } = await getClient()
-      .from('budgets')
-      .insert([{
-        id_orcamento: budget.id_orcamento,
-        user_id: budget.user_id,
-        numero_sequencial: budget.numero_sequencial,
-        status_orcamento: budget.status_orcamento,
-        cliente: budget.cliente,
-        servico: budget.servico,
-        valores: budget.valores,
-        legal: budget.legal,
-        data_criacao: budget.data_criacao
-      }]);
-    
+    if (!supabase) throw new Error("Supabase não configurado");
+    const { error } = await supabase.from('budgets').insert([budget]);
     if (error) throw error;
   },
 
   getBudgets: async (userId: string): Promise<Budget[]> => {
-    const { data, error } = await getClient()
+    if (!supabase) return [];
+    const { data, error } = await supabase
       .from('budgets')
       .select('*')
       .eq('user_id', userId)
@@ -71,16 +56,12 @@ export const db = {
   },
 
   deleteBudget: async (id: string): Promise<void> => {
-    await getClient()
-      .from('budgets')
-      .delete()
-      .eq('id_orcamento', id);
+    if (!supabase) return;
+    await supabase.from('budgets').delete().eq('id_orcamento', id);
   },
 
   updateBudgetStatus: async (id: string, status: BudgetStatus): Promise<void> => {
-    await getClient()
-      .from('budgets')
-      .update({ status_orcamento: status })
-      .eq('id_orcamento', id);
+    if (!supabase) return;
+    await supabase.from('budgets').update({ status_orcamento: status }).eq('id_orcamento', id);
   }
 };

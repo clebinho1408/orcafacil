@@ -1,9 +1,10 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 import { User } from '../types';
 import Logo from './Logo';
 import { db } from '../services/db';
+import { missingVars } from '../services/supabase';
 
 interface Props {
   onLogin: (user: User) => void;
@@ -13,6 +14,7 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isCloudAvailable = db.isCloudEnabled();
   
   const [formData, setFormData] = useState({
     email: '',
@@ -21,6 +23,43 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
     cpf_cnpj: '',
     telefone_profissional: ''
   });
+
+  if (!isCloudAvailable) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="bg-white p-8 rounded-[32px] shadow-xl border border-red-100 max-w-md text-center">
+          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-black text-slate-900 uppercase mb-4">Ajuste Necessário na Vercel</h2>
+          <p className="text-sm text-slate-500 font-bold uppercase leading-relaxed mb-6">
+            Detectamos que as seguintes chaves não estão chegando ao navegador:
+            <div className="mt-3 flex flex-wrap justify-center gap-2">
+              {missingVars.map(v => (
+                <span key={v} className="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-[10px] font-black">{v}</span>
+              ))}
+            </div>
+          </p>
+          <div className="space-y-4 text-left">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <p className="text-[10px] font-black text-slate-400 uppercase mb-2">Como resolver:</p>
+              <ol className="text-[10px] font-bold text-slate-600 space-y-2 uppercase leading-tight">
+                <li>1. Verifique se os nomes na Vercel estão idênticos aos acima.</li>
+                <li>2. Importante: Vá em <span className="text-indigo-600">Deployments</span> na Vercel.</li>
+                <li>3. Clique nos "..." do último deploy e selecione <span className="text-indigo-600 font-black">REDEPLOY</span>.</li>
+              </ol>
+            </div>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2"
+            >
+              <RefreshCw className="w-4 h-4" /> Já fiz o Redeploy, recarregar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,12 +95,8 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
         }
       }
     } catch (err: any) {
-      console.error("Erro detalhado do Supabase:", err);
-      if (err.message?.includes("Configuração")) {
-        setError('Configuração ausente: Verifique SUPABASE_URL na Vercel.');
-      } else {
-        setError('Erro no banco de dados. Verifique o console do navegador.');
-      }
+      console.error("Erro no Auth:", err);
+      setError('Erro de conexão com o banco de dados.');
     } finally {
       setIsLoading(false);
     }
@@ -173,13 +208,13 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
             <button 
               type="submit"
               disabled={isLoading}
-              className="w-full bg-[#2B59C3] text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-blue-200 flex items-center justify-center gap-3 active:scale-95 transition-all mt-4 disabled:opacity-70"
+              className="w-full bg-[#2B59C3] text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-blue-200 flex items-center justify-center gap-3 active:scale-95 transition-all mt-4 disabled:opacity-70 uppercase tracking-tighter"
             >
               {isLoading ? (
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
                 <>
-                  {isLogin ? 'ACESSAR PAINEL' : 'CRIAR CONTA'}
+                  {isLogin ? 'ACESSAR CONTA' : 'CRIAR MINHA CONTA'}
                   <ArrowRight className="w-6 h-6" />
                 </>
               )}

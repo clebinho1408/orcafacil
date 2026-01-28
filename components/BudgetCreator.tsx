@@ -15,7 +15,9 @@ import {
   ListPlus,
   MessageCircle,
   ChevronRight,
-  Trash2
+  Trash2,
+  MapPin,
+  Phone
 } from 'lucide-react';
 import { 
   Budget, 
@@ -174,10 +176,19 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
 
     if (data) {
       if (step === 'voice_services') {
-        setPendingExtraction(data);
-        setShowMultiServiceModal(true);
+        if (data.descricao_servico && data.valor_total) {
+          setPendingExtraction(data);
+          setShowMultiServiceModal(true);
+        } else {
+          alert("Diga o serviço e o valor para continuar.");
+        }
       } else if (step === 'voice_client') {
-        setClient(prev => ({ ...prev, nome_cliente: (data.nome_cliente || transcript).toUpperCase() }));
+        setClient(prev => ({ 
+          ...prev, 
+          nome_cliente: (data.nome_cliente || transcript).toUpperCase(),
+          telefone_cliente: data.telefone_cliente || prev.telefone_cliente,
+          endereco_cliente: data.endereco_cliente || prev.endereco_cliente
+        }));
         setTranscript('');
         setStep('voice_obs');
       } else if (step === 'voice_obs') {
@@ -186,6 +197,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
         setStep('details');
       }
     } else { 
+      // Fallback simples sem IA
       if (step === 'voice_client') {
         setClient(prev => ({ ...prev, nome_cliente: transcript.toUpperCase() }));
         setTranscript('');
@@ -195,22 +207,25 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
         setTranscript('');
         setStep('details');
       } else {
-        alert("Não conseguimos processar o áudio. Tente novamente."); 
+        alert("Não conseguimos processar o áudio. Tente falar o serviço e o valor claramente."); 
       }
     }
   };
 
   const applyServiceItem = (data: ExtractedBudget, addAnother: boolean) => {
     const newItem: ServiceItem = {
-      descricao: data.descricao_servico.toUpperCase(),
-      valor: data.valor_total
+      descricao: data.descricao_servico?.toUpperCase() || 'SERVIÇO',
+      valor: data.valor_total || 'R$ 0,00'
     };
     
     const newItems = [...items, newItem];
     setItems(newItems);
     setValues(prev => ({
       ...prev,
-      valor_total: calculateTotal(newItems)
+      valor_total: calculateTotal(newItems),
+      valor_mao_de_obra: data.valor_mao_de_obra || prev.valor_mao_de_obra,
+      valor_material: data.valor_material || prev.valor_material,
+      forma_pagamento: data.forma_pagamento || prev.forma_pagamento
     }));
 
     setTranscript('');
@@ -333,16 +348,17 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
             <div className="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center mb-4 text-green-600">
               <Check className="w-6 h-6" />
             </div>
-            <h3 className="text-xl font-black text-slate-900 leading-tight mb-2 uppercase">Serviço Identificado!</h3>
+            <h3 className="text-xl font-black text-slate-900 leading-tight mb-2 uppercase">Item Reconhecido!</h3>
             <p className="text-slate-500 font-bold mb-4 text-sm">
-              Item: <span className="text-indigo-600">"{pendingExtraction.descricao_servico}"</span> por <span className="text-indigo-600">{pendingExtraction.valor_total}</span>.
+              <span className="text-indigo-600">"{pendingExtraction.descricao_servico}"</span> <br/>
+              Valor: <span className="text-indigo-600">{pendingExtraction.valor_total}</span>.
             </p>
             <div className="flex flex-col gap-2">
               <button onClick={() => applyServiceItem(pendingExtraction, true)} className="w-full bg-white border-2 border-indigo-600 text-indigo-600 py-3 rounded-xl font-black text-xs flex items-center justify-center gap-2 active:scale-95 transition-all">
                 <PlusCircle className="w-4 h-4" /> ADICIONAR OUTRO SERVIÇO
               </button>
               <button onClick={() => applyServiceItem(pendingExtraction, false)} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 active:scale-95 transition-all">
-                PRÓXIMO: NOME DO CLIENTE <ChevronRight className="w-4 h-4" />
+                PRÓXIMO: CLIENTE <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -380,8 +396,8 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
             <h2 className="text-xl font-black mb-0.5 text-slate-900 leading-tight">{isRecording ? "Pode falar..." : "Toque para falar"}</h2>
             <p className="text-slate-500 text-[10px] max-w-xs mx-auto font-bold uppercase tracking-tight">
               {step === 'voice_services' && "Diga o serviço e o valor (Ex: Pintura 500 reais)"}
-              {step === 'voice_client' && "Diga o nome do cliente"}
-              {step === 'voice_obs' && "Alguma observação? Fale ou pule."}
+              {step === 'voice_client' && "Diga o nome do cliente (pode incluir fone e endereço)"}
+              {step === 'voice_obs' && "Alguma observação extra?"}
             </p>
           </div>
           
@@ -407,13 +423,13 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
           <div className="flex flex-col w-[90%] gap-2 shrink-0">
             {!isRecording && transcript && (
               <button onClick={handleProcessWithIA} disabled={isExtracting} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 active:scale-95 shadow-xl">
-                {isExtracting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>CONFIRMAR <ArrowRight className="w-4 h-4" /></>}
+                {isExtracting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>PROCESSAR <ArrowRight className="w-4 h-4" /></>}
               </button>
             )}
             
             {!isRecording && !transcript && step === 'voice_obs' && (
               <button onClick={() => setStep('details')} className="w-full bg-indigo-50 text-indigo-600 py-3 rounded-xl font-black text-[10px] uppercase flex items-center justify-center gap-2 active:bg-indigo-100">
-                Pular observação <ChevronRight className="w-4 h-4" />
+                Finalizar orcamento <ChevronRight className="w-4 h-4" />
               </button>
             )}
           </div>
@@ -421,23 +437,32 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
       )}
 
       {step === 'details' && (
-        <div className="space-y-3 animate-in slide-in-from-right-4 overflow-x-hidden flex-1">
+        <div className="space-y-3 animate-in slide-in-from-right-4 overflow-x-hidden flex-1 pb-24">
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-            <div className="flex items-center gap-2 mb-2 text-indigo-600"><UserPlus className="w-3.5 h-3.5" /><h3 className="font-bold uppercase text-[9px] tracking-widest">Cliente</h3></div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              <input className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs w-full font-black uppercase" placeholder="Nome do Cliente" value={client.nome_cliente} onChange={e => setClient({ ...client, nome_cliente: e.target.value.toUpperCase() })} />
-              <input className="p-2.5 bg-slate-50 rounded-xl border border-slate-200 text-xs w-full" placeholder="WhatsApp" value={client.telefone_cliente} onChange={e => setClient({ ...client, telefone_cliente: e.target.value })} />
+            <div className="flex items-center gap-2 mb-3 text-indigo-600"><UserPlus className="w-3.5 h-3.5" /><h3 className="font-bold uppercase text-[9px] tracking-widest">Informações do Cliente</h3></div>
+            <div className="space-y-2">
+              <input className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs w-full font-black uppercase" placeholder="Nome Completo" value={client.nome_cliente} onChange={e => setClient({ ...client, nome_cliente: e.target.value.toUpperCase() })} />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input className="p-3 pl-9 bg-slate-50 rounded-xl border border-slate-200 text-xs w-full" placeholder="WhatsApp" value={client.telefone_cliente} onChange={e => setClient({ ...client, telefone_cliente: e.target.value })} />
+                </div>
+                <div className="relative">
+                  <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                  <input className="p-3 pl-9 bg-slate-50 rounded-xl border border-slate-200 text-xs w-full uppercase" placeholder="Endereço" value={client.endereco_cliente} onChange={e => setClient({ ...client, endereco_cliente: e.target.value.toUpperCase() })} />
+                </div>
+              </div>
             </div>
           </div>
 
           <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-            <div className="flex items-center gap-2 mb-2 text-indigo-600"><Package className="w-3.5 h-3.5" /><h3 className="font-bold uppercase text-[9px] tracking-widest">Itens</h3></div>
+            <div className="flex items-center gap-2 mb-3 text-indigo-600"><Package className="w-3.5 h-3.5" /><h3 className="font-bold uppercase text-[9px] tracking-widest">Serviços e Valores</h3></div>
             <div className="space-y-2 mb-3">
               {items.map((item, idx) => (
-                <div key={idx} className="flex flex-col gap-1.5 p-2.5 bg-slate-50 rounded-xl border border-slate-200">
+                <div key={idx} className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-200">
                   <div className="flex items-start justify-between">
                     <input 
-                      className="w-full bg-transparent font-bold text-[11px] uppercase outline-none" 
+                      className="w-full bg-transparent font-black text-[11px] uppercase outline-none" 
                       value={item.descricao} 
                       onChange={e => {
                         const newItems = [...items];
@@ -451,7 +476,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
                   </div>
                   <div className="flex items-center justify-between">
                     <input 
-                      className="w-24 bg-white px-2 py-1 rounded-lg font-black text-indigo-600 text-[11px] border border-slate-100" 
+                      className="w-28 bg-white px-2 py-1.5 rounded-lg font-black text-indigo-600 text-[11px] border border-slate-100" 
                       value={item.valor} 
                       onChange={e => {
                         const newItems = [...items];
@@ -464,20 +489,30 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-1 gap-3 border-t border-slate-100 pt-3">
-              <div className="flex items-center justify-between">
-                <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Total</label>
-                <input className="w-32 p-2 bg-green-50 rounded-lg border border-green-100 text-sm font-black text-green-700 text-right" value={values.valor_total} onChange={e => setValues({ ...values, valor_total: e.target.value })} />
+            
+            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase">Mão de Obra</label>
+                <input className="w-full p-2 bg-slate-50 rounded-lg border border-slate-200 text-xs font-bold" value={values.valor_mao_de_obra} onChange={e => setValues({...values, valor_mao_de_obra: e.target.value})} placeholder="R$ 0,00" />
               </div>
+              <div className="space-y-1">
+                <label className="text-[8px] font-black text-slate-400 uppercase">Material</label>
+                <input className="w-full p-2 bg-slate-50 rounded-lg border border-slate-200 text-xs font-bold" value={values.valor_material} onChange={e => setValues({...values, valor_material: e.target.value})} placeholder="R$ 0,00" />
+              </div>
+            </div>
+
+            <div className="mt-4 flex items-center justify-between bg-green-50 p-3 rounded-xl border border-green-100">
+                <label className="text-[10px] font-black text-green-700 uppercase tracking-widest">Valor Total</label>
+                <input className="w-32 bg-transparent text-right font-black text-green-700 text-lg outline-none" value={values.valor_total} onChange={e => setValues({ ...values, valor_total: e.target.value })} />
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 pt-1 pb-20">
+          <div className="flex flex-col gap-2 pt-1 pb-4">
             <button onClick={() => setStep('preview')} disabled={items.length === 0} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 shadow-xl active:scale-95 disabled:opacity-50 transition-all">
-              VER RESUMO DA PROPOSTA <ChevronRight className="w-4 h-4" />
+              VISUALIZAR PROPOSTA <ChevronRight className="w-4 h-4" />
             </button>
             <button onClick={handleResetToVoice} className="w-full py-2 text-slate-400 font-bold text-[10px] uppercase flex items-center justify-center gap-1 active:bg-slate-50 rounded-lg">
-              <RotateCcw className="w-3 h-3" /> Reiniciar
+              <RotateCcw className="w-3 h-3" /> Reiniciar Processo
             </button>
           </div>
         </div>
@@ -517,29 +552,29 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
                 </div>
              </div>
           </div>
-          <div className="space-y-2 pb-20 px-1 shrink-0">
+          <div className="space-y-2 pb-24 px-1 shrink-0">
             <button onClick={handleFinalize} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm shadow-xl active:scale-95 flex items-center justify-center gap-2">
-              <Check className="w-5 h-5 shrink-0" /> <span>SALVAR ORÇAMENTO</span>
+              <Check className="w-5 h-5 shrink-0" /> <span>CONFIRMAR E SALVAR</span>
             </button>
             <button onClick={() => setStep('details')} className="w-full py-2 text-slate-500 font-bold text-[10px] uppercase flex items-center justify-center gap-1">
-              <ChevronLeft className="w-3.5 h-3.5" /> Voltar e Editar
+              <ChevronLeft className="w-3.5 h-3.5" /> Voltar para Edição
             </button>
           </div>
         </div>
       )}
 
       {step === 'finished' && lastBudget && (
-        <div className="flex flex-col items-center py-6 bg-white rounded-3xl shadow-xl border-4 border-indigo-50 animate-in zoom-in-90 mb-16 flex-1 justify-center">
-          <div className="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center mb-3 text-green-600"><Check className="w-8 h-8" /></div>
-          <h2 className="text-xl font-black mb-6 text-slate-900 text-center px-4 uppercase tracking-tighter">ORÇAMENTO SALVO!</h2>
-          <div className="w-full px-8 flex flex-col gap-2.5">
-            <button onClick={() => generateAndSharePDF(lastBudget)} disabled={isGeneratingPDF} className="w-full bg-white border-2 border-indigo-600 text-indigo-600 py-4 rounded-xl font-black text-base flex items-center justify-center gap-3 active:scale-95 transition-all">
+        <div className="flex flex-col items-center py-8 bg-white rounded-3xl shadow-xl border-4 border-indigo-50 animate-in zoom-in-90 mb-20 flex-1 justify-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600"><Check className="w-10 h-10" /></div>
+          <h2 className="text-2xl font-black mb-8 text-slate-900 text-center px-4 uppercase tracking-tighter leading-none">ORÇAMENTO GERADO!</h2>
+          <div className="w-full px-8 flex flex-col gap-3">
+            <button onClick={() => generateAndSharePDF(lastBudget)} disabled={isGeneratingPDF} className="w-full bg-white border-2 border-slate-900 text-slate-900 py-4 rounded-xl font-black text-base flex items-center justify-center gap-3 active:scale-95 transition-all">
               {isGeneratingPDF ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileText className="w-5 h-5" />} ENVIAR PDF
             </button>
-            <button onClick={() => sendWhatsApp(lastBudget)} className="w-full bg-green-600 text-white py-4 rounded-xl font-black text-base flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all">
+            <button onClick={() => sendWhatsApp(lastBudget)} className="w-full bg-[#25D366] text-white py-4 rounded-xl font-black text-base flex items-center justify-center gap-3 shadow-lg active:scale-95 transition-all">
               <MessageCircle className="w-5 h-5 fill-current" /> WHATSAPP
             </button>
-            <button onClick={() => setStep('voice_services')} className="text-slate-400 py-3 rounded-xl font-black active:text-slate-600 transition-colors uppercase text-[10px] tracking-widest mt-2">Fazer outro orçamento</button>
+            <button onClick={() => setStep('voice_services')} className="text-slate-400 py-3 rounded-xl font-black active:text-slate-600 transition-colors uppercase text-[10px] tracking-widest mt-4">Novo Orçamento</button>
           </div>
         </div>
       )}
