@@ -115,12 +115,6 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
               )}
             </div>
             <div className="flex flex-col gap-3 justify-end">
-               {(budget.valores.valor_mao_de_obra || budget.valores.valor_material) && (
-                 <div className="space-y-1 text-right mb-1">
-                    {budget.valores.valor_mao_de_obra && <p className="text-[10px] font-bold uppercase">Mão de Obra: {budget.valores.valor_mao_de_obra}</p>}
-                    {budget.valores.valor_material && <p className="text-[10px] font-bold uppercase">Material: {budget.valores.valor_material}</p>}
-                 </div>
-               )}
                {hasObservation && (
                 <div className="p-3 bg-white rounded-lg border border-black/10">
                   <p className="text-[8px] font-black text-black uppercase mb-1 tracking-widest opacity-50">Notas:</p>

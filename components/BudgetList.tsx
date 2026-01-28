@@ -12,7 +12,8 @@ import {
   Receipt,
   Download,
   Search,
-  Hash
+  Hash,
+  AlertCircle
 } from 'lucide-react';
 import BudgetPreview from './BudgetPreview';
 import ReceiptPreview from './ReceiptPreview';
@@ -20,11 +21,12 @@ import ReceiptPreview from './ReceiptPreview';
 interface Props {
   budgets: Budget[];
   onUpdateStatus: (id: string, status: BudgetStatus) => void;
+  onUpdateBudget: (id: string, updates: Partial<Budget>) => void;
   onDelete: (id: string) => void;
   professional: ProfessionalData | null;
 }
 
-const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, professional }) => {
+const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, onDelete, professional }) => {
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [pdfBudget, setPdfBudget] = useState<Budget | null>(null);
   const [receiptBudget, setReceiptBudget] = useState<Budget | null>(null);
@@ -45,12 +47,23 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
     }).format(numberValue);
   };
 
+  const parseCurrency = (val: string) => {
+    return parseFloat(val.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+  };
+
+  const formatCurrency = (val: number) => {
+    return new Intl.NumberFormat('pt-BR', { 
+      style: "currency", 
+      currency: "BRL" 
+    }).format(val);
+  };
+
   const handleValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatCurrencyInput(e.target.value);
     setReceiptValue(formatted);
   };
 
-  const formatWhatsAppMessage = (budget: Budget) => {
+  const handleWhatsApp = (budget: Budget) => {
     const prof = professional;
     const profName = prof?.nome_profissional || 'Empresa';
 
@@ -66,35 +79,17 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
     message += `Olá *${budget.cliente.nome_cliente || 'cliente'}*,\n`;
     message += `Seguem os detalhes do seu orçamento:\n\n`;
     
-    const items = budget.servico.items || [];
-    if (items.length > 0) {
-      items.forEach((item, idx) => {
-        message += `${idx + 1}. *${item.descricao}* - ${item.valor}\n`;
-      });
-    } else {
-      message += `*🛠️ SERVIÇO:* ${budget.servico.descricao_servico}\n`;
-    }
+    budget.servico.items.forEach((item, idx) => {
+      message += `${idx + 1}. *${item.descricao}* - ${item.valor}\n`;
+    });
 
-    if (prof?.formas_pagamento_aceitas) {
-      message += `\n*💳 FORMA DE PAGAMENTO:* ${prof.formas_pagamento_aceitas}\n`;
-    }
-    
-    if (prof?.condicoes_aceitas) {
-      message += `*📋 CONDIÇÕES:* ${prof.condicoes_aceitas}\n`;
-    }
-    
-    if (budget.servico.observacoes_servico) {
-      message += `\n*📝 OBS:* ${budget.servico.observacoes_servico}\n`;
-    }
+    if (prof?.formas_pagamento_aceitas) message += `\n*💳 FORMA DE PAGAMENTO:* ${prof.formas_pagamento_aceitas}\n`;
+    if (prof?.condicoes_aceitas) message += `*📋 CONDIÇÕES:* ${prof.condicoes_aceitas}\n`;
+    if (budget.servico.observacoes_servico) message += `\n*📝 OBS:* ${budget.servico.observacoes_servico}\n`;
     
     message += `\n*💰 VALOR TOTAL:* _${budget.valores.valor_total}_\n`;
     
-    return encodeURIComponent(message);
-  };
-
-  const handleWhatsApp = (budget: Budget) => {
-    const text = formatWhatsAppMessage(budget);
-    const url = `https://wa.me/${budget.cliente.telefone_cliente.replace(/\D/g, '')}?text=${text}`;
+    const url = `https://wa.me/${budget.cliente.telefone_cliente.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
 
@@ -104,7 +99,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
       margin: 0,
       filename,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
+      html2canvas: { scale: 3, useCORS: true, logging: false, backgroundColor: '#ffffff' },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     const pdfBlob = await window.html2pdf().from(element).set(opt).output('blob');
@@ -133,7 +128,20 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
   const handleShareReceipt = async () => {
     if (!receiptBudget || !receiptValue) return;
     setIsGeneratingReceipt(true);
-    await new Promise(r => setTimeout(r, 800));
+    
+    // Atualiza o acumulado no banco de dados
+    const currentPaidNow = parseCurrency(receiptValue);
+    const alreadyPaid = parseCurrency(receiptBudget.valores.valor_pago_acumulado || '0');
+    const newTotalPaid = formatCurrency(alreadyPaid + currentPaidNow);
+    
+    await onUpdateBudget(receiptBudget.id_orcamento, {
+      valores: {
+        ...receiptBudget.valores,
+        valor_pago_acumulado: newTotalPaid
+      }
+    });
+
+    await new Promise(r => setTimeout(r, 1200));
     await generatePDF(receiptContainerRef.current, `Recibo_${receiptBudget.cliente.nome_cliente}.pdf`);
     setIsGeneratingReceipt(false);
     setReceiptBudget(null);
@@ -150,9 +158,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
 
   const filteredBudgets = budgets.filter(b => {
     const term = searchTerm.toLowerCase();
-    const matchesName = b.cliente.nome_cliente.toLowerCase().includes(term);
-    const matchesNum = b.numero_sequencial?.toString().includes(term);
-    return matchesName || matchesNum;
+    return b.cliente.nome_cliente.toLowerCase().includes(term) || b.numero_sequencial?.toString().includes(term);
   });
 
   return (
@@ -180,30 +186,44 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
                 <Receipt className="w-6 h-6" />
               </div>
               <div>
-                <h3 className="text-xl font-black uppercase tracking-tight">Gerar Recibo</h3>
-                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Confirme o valor recebido</p>
+                <h3 className="text-xl font-black uppercase tracking-tight">Recibo Profissional</h3>
+                <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Confirmação de Pagamento</p>
               </div>
             </div>
             
             <div className="space-y-4 mb-8">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Orçado</p>
+                  <p className="text-sm font-black text-slate-700">{receiptBudget.valores.valor_total}</p>
+                </div>
+                <div className="p-3 bg-indigo-50 rounded-xl border border-indigo-100">
+                  <p className="text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-1">Pago Anteriormente</p>
+                  <p className="text-sm font-black text-indigo-700">{receiptBudget.valores.valor_pago_acumulado || 'R$ 0,00'}</p>
+                </div>
+              </div>
+
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Valor Recebido:</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 mb-2 block tracking-widest">Valor Recebido Agora:</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 font-black text-slate-400">R$</span>
                   <input 
                     autoFocus
                     type="text"
                     inputMode="numeric"
-                    className="w-full p-5 pl-12 bg-slate-50 border-2 border-slate-200 rounded-2xl text-3xl font-black text-slate-900 outline-none focus:border-indigo-500 transition-all"
+                    className="w-full p-5 pl-12 bg-white border-2 border-indigo-600 rounded-2xl text-3xl font-black text-slate-900 outline-none shadow-inner"
                     placeholder="0,00"
                     value={receiptValue.replace("R$", "").trim()}
                     onChange={handleValueChange}
                   />
                 </div>
-              </div>
-              <div className="p-4 bg-indigo-50 rounded-xl border border-indigo-100">
-                <p className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Total do Orçamento:</p>
-                <p className="text-lg font-black text-indigo-700">{receiptBudget.valores.valor_total}</p>
+                {receiptValue && parseCurrency(receiptValue) > 0 && (
+                  <p className="text-[10px] font-bold text-green-600 mt-2 uppercase flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" /> Saldo restante após este pagamento: {
+                      formatCurrency(Math.max(0, parseCurrency(receiptBudget.valores.valor_total) - (parseCurrency(receiptBudget.valores.valor_pago_acumulado || '0') + parseCurrency(receiptValue))))
+                    }
+                  </p>
+                )}
               </div>
             </div>
 
@@ -213,11 +233,11 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
                 disabled={!receiptValue || isGeneratingReceipt}
                 className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl active:scale-95 disabled:opacity-50 transition-all"
               >
-                {isGeneratingReceipt ? <Loader2 className="animate-spin" /> : <Download className="w-5 h-5" />} GERAR RECIBO PDF
+                {isGeneratingReceipt ? <Loader2 className="animate-spin" /> : <CheckCircle className="w-5 h-5" />} EMITIR E COMPARTILHAR
               </button>
               <button 
                 onClick={() => { setReceiptBudget(null); setReceiptValue(''); }}
-                className="w-full py-4 text-slate-400 font-black uppercase text-xs tracking-widest"
+                className="w-full py-2 text-slate-400 font-black uppercase text-[10px] tracking-widest"
               >
                 Cancelar
               </button>
@@ -227,17 +247,13 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
       )}
 
       <div className="flex flex-col gap-4 mb-6">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-black uppercase tracking-tighter">Histórico</h2>
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{budgets.length} registros</span>
-        </div>
-
+        <h2 className="text-2xl font-black uppercase tracking-tighter">Meus Orçamentos</h2>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input 
             type="text"
             className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
-            placeholder="Pesquisar por cliente ou número..."
+            placeholder="Pesquisar cliente ou número..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -246,10 +262,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
 
       <div className="space-y-3">
         {filteredBudgets.map((budget) => (
-          <div 
-            key={budget.id_orcamento} 
-            className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm group"
-          >
+          <div key={budget.id_orcamento} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm group">
             <div className="flex flex-col gap-4">
               <div className="flex gap-4">
                 <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 relative">
@@ -273,57 +286,28 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
               </div>
 
               <div className="flex flex-wrap items-center gap-2 pt-2">
-                <button 
-                  onClick={() => handleWhatsApp(budget)}
-                  className="bg-green-600 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95"
-                >
+                <button onClick={() => handleWhatsApp(budget)} className="bg-green-600 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95">
                   <MessageCircle className="w-4 h-4 fill-current" /> Whats
                 </button>
-                <button 
-                  onClick={() => handleShareBudget(budget)}
-                  disabled={generatingId === budget.id_orcamento}
-                  className="bg-white border-2 border-slate-900 text-slate-900 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95"
-                >
+                <button onClick={() => handleShareBudget(budget)} disabled={generatingId === budget.id_orcamento} className="bg-white border-2 border-slate-900 text-slate-900 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95">
                   {generatingId === budget.id_orcamento ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />} PDF
                 </button>
-                
                 {budget.status_orcamento === BudgetStatus.APROVADO && (
                   <button 
-                    onClick={() => { setReceiptBudget(budget); setReceiptValue(budget.valores.valor_total); }}
-                    className="bg-slate-100 text-slate-900 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase hover:bg-slate-200 active:scale-95 transition-colors"
+                    onClick={() => { 
+                      setReceiptBudget(budget); 
+                      const totalNum = parseCurrency(budget.valores.valor_total);
+                      const paidNum = parseCurrency(budget.valores.valor_pago_acumulado || '0');
+                      setReceiptValue(formatCurrency(totalNum - paidNum)); 
+                    }} 
+                    className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95"
                   >
                     <Receipt className="w-4 h-4" /> Recibo
                   </button>
                 )}
-
-                <button 
-                  onClick={() => onDelete(budget.id_orcamento)}
-                  className="p-2.5 text-red-400 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl transition-all ml-auto"
-                >
+                <button onClick={() => onDelete(budget.id_orcamento)} className="p-2.5 text-red-400 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl transition-all ml-auto">
                   <Trash2 className="w-5 h-5" />
                 </button>
-              </div>
-            </div>
-
-            <div className="mt-5 pt-4 border-t border-slate-50 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  <Hash className="w-3.5 h-3.5" /> {budget.numero_sequencial}
-                </div>
-                <div className="w-1 h-1 bg-slate-200 rounded-full"></div>
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" /> {new Date(budget.data_criacao).toLocaleDateString()}
-                </div>
-              </div>
-              <div className="flex gap-4">
-                {budget.status_orcamento !== BudgetStatus.APROVADO && (
-                  <button 
-                    onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.APROVADO)}
-                    className="hover:text-green-600 transition-colors flex items-center gap-1"
-                  >
-                    <CheckCircle className="w-3.5 h-3.5" /> Aprovar
-                  </button>
-                )}
               </div>
             </div>
           </div>

@@ -95,6 +95,15 @@ const App: React.FC = () => {
     }
   };
 
+  const updateBudget = async (id: string, updates: Partial<Budget>) => {
+    try {
+      await db.updateBudget(id, updates);
+      setBudgets(prev => prev.map(b => b.id_orcamento === id ? { ...b, ...updates } : b));
+    } catch (e: any) {
+      alert(`Erro ao atualizar orçamento: ${e.message}`);
+    }
+  };
+
   const updateBudgetStatus = async (id: string, status: BudgetStatus) => {
     try {
       await db.updateBudgetStatus(id, status);
@@ -123,7 +132,6 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full overflow-hidden safe-top">
-      {/* Header Fixo */}
       <header className="bg-white px-6 pt-8 pb-6 border-b border-slate-100 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -144,7 +152,6 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Área de Conteúdo Scrollável */}
       <main className="flex-1 overflow-y-auto px-6 py-6 pb-24 bg-slate-50">
         {isLoadingData ? (
           <div className="h-full flex flex-col items-center justify-center gap-4 text-slate-400">
@@ -165,6 +172,7 @@ const App: React.FC = () => {
               <BudgetList 
                 budgets={budgets} 
                 onUpdateStatus={updateBudgetStatus} 
+                onUpdateBudget={updateBudget}
                 onDelete={deleteBudget}
                 professional={currentUser}
               />
@@ -177,35 +185,17 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Bottom Navigation Fixo */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 flex items-center justify-around px-4 py-4 pb-8 z-50">
-        <button 
-          onClick={() => setActiveTab('create')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'create' ? 'text-indigo-600' : 'text-slate-400'}`}
-        >
-          <div className={`p-2 rounded-xl ${activeTab === 'create' ? 'bg-indigo-50' : 'bg-transparent'}`}>
-            <Plus className="w-6 h-6" />
-          </div>
+        <button onClick={() => setActiveTab('create')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'create' ? 'text-indigo-600' : 'text-slate-400'}`}>
+          <div className={`p-2 rounded-xl ${activeTab === 'create' ? 'bg-indigo-50' : 'bg-transparent'}`}><Plus className="w-6 h-6" /></div>
           <span className="text-[10px] font-black uppercase tracking-widest">Novo</span>
         </button>
-
-        <button 
-          onClick={() => setActiveTab('history')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'history' ? 'text-indigo-600' : 'text-slate-400'}`}
-        >
-          <div className={`p-2 rounded-xl ${activeTab === 'history' ? 'bg-indigo-50' : 'bg-transparent'}`}>
-            <History className="w-6 h-6" />
-          </div>
+        <button onClick={() => setActiveTab('history')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'history' ? 'text-indigo-600' : 'text-slate-400'}`}>
+          <div className={`p-2 rounded-xl ${activeTab === 'history' ? 'bg-indigo-50' : 'bg-transparent'}`}><History className="w-6 h-6" /></div>
           <span className="text-[10px] font-black uppercase tracking-widest">Lista</span>
         </button>
-
-        <button 
-          onClick={() => setActiveTab('settings')}
-          className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'settings' ? 'text-indigo-600' : 'text-slate-400'}`}
-        >
-          <div className={`p-2 rounded-xl ${activeTab === 'settings' ? 'bg-indigo-50' : 'bg-transparent'}`}>
-            <Settings className="w-6 h-6" />
-          </div>
+        <button onClick={() => setActiveTab('settings')} className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'settings' ? 'text-indigo-600' : 'text-slate-400'}`}>
+          <div className={`p-2 rounded-xl ${activeTab === 'settings' ? 'bg-indigo-50' : 'bg-transparent'}`}><Settings className="w-6 h-6" /></div>
           <span className="text-[10px] font-black uppercase tracking-widest">Dados</span>
         </button>
       </nav>

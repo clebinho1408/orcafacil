@@ -37,11 +37,10 @@ export interface ServiceData {
 }
 
 export interface ValuesData {
-  valor_mao_de_obra: string;
-  valor_material: string;
   valor_total: string;
   desconto: string;
   forma_pagamento: string;
+  valor_pago_acumulado?: string; // Controle de pagamentos parciais
 }
 
 export interface LegalData {
@@ -59,7 +58,7 @@ export enum BudgetStatus {
 
 export interface Budget {
   id_orcamento: string;
-  user_id: string; // Relaciona o orçamento ao usuário SaaS
+  user_id: string; 
   numero_sequencial: number;
   status_orcamento: BudgetStatus;
   data_criacao: string;
@@ -78,8 +77,6 @@ export interface ExtractedBudget {
   endereco_cliente?: string;
   descricao_servico?: string;
   valor_total?: string;
-  valor_mao_de_obra?: string;
-  valor_material?: string;
   observacoes_servico?: string;
   forma_pagamento?: string;
 }

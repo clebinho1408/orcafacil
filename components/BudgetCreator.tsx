@@ -74,11 +74,10 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
   });
 
   const [values, setValues] = useState<ValuesData>({
-    valor_mao_de_obra: '',
-    valor_material: '',
     valor_total: 'R$ 0,00',
     desconto: '',
     forma_pagamento: 'PIX',
+    valor_pago_acumulado: 'R$ 0,00'
   });
 
   const [legal, setLegal] = useState<LegalData>({
@@ -232,8 +231,6 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
     setValues(prev => ({
       ...prev,
       valor_total: calculateTotal(newItems),
-      valor_mao_de_obra: data.valor_mao_de_obra || prev.valor_mao_de_obra,
-      valor_material: data.valor_material || prev.valor_material,
       forma_pagamento: data.forma_pagamento || prev.forma_pagamento
     }));
 
@@ -262,7 +259,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
     setTranscript('');
     setItems([]);
     setClient({ nome_cliente: '', telefone_cliente: '', endereco_cliente: '', observacoes_cliente: '' });
-    setValues({ valor_mao_de_obra: '', valor_material: '', valor_total: 'R$ 0,00', desconto: '', forma_pagamento: 'PIX' });
+    setValues({ valor_total: 'R$ 0,00', desconto: '', forma_pagamento: 'PIX', valor_pago_acumulado: 'R$ 0,00' });
     setStep('voice_services');
   };
 
@@ -529,17 +526,6 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
               ))}
             </div>
             
-            <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
-              <div className="space-y-1">
-                <label className="text-[8px] font-black text-slate-400 uppercase">Mão de Obra</label>
-                <input className="w-full p-2 bg-slate-50 rounded-md border border-slate-200 text-xs font-bold" value={values.valor_mao_de_obra} onChange={e => setValues({...values, valor_mao_de_obra: e.target.value})} placeholder="R$ 0,00" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-[8px] font-black text-slate-400 uppercase">Material</label>
-                <input className="w-full p-2 bg-slate-50 rounded-md border border-slate-200 text-xs font-bold" value={values.valor_material} onChange={e => setValues({...values, valor_material: e.target.value})} placeholder="R$ 0,00" />
-              </div>
-            </div>
-
             <div className="mt-4 flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-100">
                 <label className="text-[10px] font-black text-green-700 uppercase tracking-widest">Valor Total</label>
                 <input className="w-32 bg-transparent text-right font-black text-green-700 text-lg outline-none" value={values.valor_total} onChange={e => setValues({ ...values, valor_total: e.target.value })} />
