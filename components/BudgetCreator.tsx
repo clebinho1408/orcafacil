@@ -111,10 +111,16 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
 
   useEffect(() => {
     if (step === 'preview' && previewWrapperRef.current) {
-      const containerWidth = previewWrapperRef.current.offsetWidth;
-      const a4WidthPx = 210 * 3.7795275591; // 210mm em pixels
-      const scale = (containerWidth - 48) / a4WidthPx;
-      setPreviewScale(Math.min(scale, 1));
+      const updateScale = () => {
+        const containerWidth = previewWrapperRef.current?.offsetWidth || 0;
+        const a4WidthPx = 210 * 3.7795275591; // 210mm em pixels
+        const scale = (containerWidth - 32) / a4WidthPx;
+        setPreviewScale(Math.min(scale, 1));
+      };
+      
+      updateScale();
+      window.addEventListener('resize', updateScale);
+      return () => window.removeEventListener('resize', updateScale);
     }
   }, [step]);
 
@@ -297,9 +303,9 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
     const opt = {
       margin: 0,
       filename: `Orcamento_${budget.cliente.nome_cliente || 'Cliente'}.pdf`,
-      image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2.5, useCORS: true, letterRendering: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
     };
     try {
       const pdfBlob = await window.html2pdf().from(element).set(opt).output('blob');
@@ -339,9 +345,9 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
   const currentStatusIndex = step.includes('voice') ? 0 : (step === 'details' ? 1 : 2);
 
   return (
-    <div className="space-y-3 animate-in slide-in-from-bottom-4 duration-500 print:hidden flex flex-col min-h-full">
+    <div className="space-y-3 animate-in slide-in-from-bottom-4 duration-500 print:hidden flex flex-col min-h-full overflow-x-hidden">
       <div className="pdf-render-wrapper">
-        <div id="pdf-content-to-capture">
+        <div id="pdf-content-to-capture" style={{ width: '210mm', height: '297mm' }}>
           {pdfBudget && <BudgetPreview budget={pdfBudget} />}
         </div>
       </div>
@@ -544,15 +550,15 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
       )}
 
       {step === 'preview' && (
-        <div className="flex-1 flex flex-col min-h-0 animate-in zoom-in-95" ref={previewWrapperRef}>
-          <div className="bg-slate-200 rounded-xl border border-slate-300 shadow-inner overflow-y-auto p-2 mb-3 min-h-[350px] flex justify-center scroll-smooth">
+        <div className="flex-1 flex flex-col min-h-0 animate-in zoom-in-95 relative overflow-hidden" ref={previewWrapperRef}>
+          <div className="bg-slate-200 rounded-xl border border-slate-300 shadow-inner overflow-auto p-4 mb-3 flex-1 flex flex-col items-center scroll-smooth">
              <div style={{ 
                height: `calc(297mm * ${previewScale})`, 
-               width: `calc(210mm * ${previewScale})`, 
-               position: 'relative' 
+               width: `calc(210mm * ${previewScale})`,
+               flexShrink: 0
              }}>
                 <div 
-                  className="preview-scale-container origin-top-left shadow-2xl bg-white overflow-hidden rounded-sm" 
+                  className="preview-scale-container origin-top-left shadow-2xl bg-white overflow-hidden" 
                   style={{ transform: `scale(${previewScale})` }}
                 >
                   <BudgetPreview budget={{ 
@@ -577,7 +583,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
                 </div>
              </div>
           </div>
-          <div className="space-y-2 pb-24 px-1 shrink-0">
+          <div className="space-y-2 pb-24 px-1 shrink-0 bg-slate-50">
             <button onClick={handleFinalize} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm shadow-xl active:scale-95 flex items-center justify-center gap-2">
               <Check className="w-5 h-5 shrink-0" /> <span>CONFIRMAR E SALVAR</span>
             </button>
