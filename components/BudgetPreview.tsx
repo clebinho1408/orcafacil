@@ -28,7 +28,7 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
         color: '#000000',
         boxSizing: 'border-box',
         overflow: 'hidden',
-        padding: '15mm' 
+        padding: '12mm 15mm' 
       }}
     >
       <style>{`
@@ -52,7 +52,7 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
             <p className="text-[13px] font-black text-black uppercase tracking-widest opacity-80">
               CNPJ/CPF: {prof?.cpf_cnpj}
             </p>
-            <p className="text-[12px] font-bold text-black uppercase mt-1 leading-tight opacity-90">
+            <p className="text-[11px] font-bold text-black uppercase mt-1 leading-tight opacity-90">
               {prof?.endereco_profissional}
             </p>
           </div>
@@ -73,13 +73,13 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
           {budget.cliente.nome_cliente || 'CLIENTE NÃO INFORMADO'}
         </p>
         <div className="flex gap-4 mt-2 text-[11px] font-bold text-black uppercase">
-          {budget.cliente.telefone_cliente && <span>Fone: {budget.cliente.telefone_cliente}</span>}
-          {budget.cliente.endereco_cliente && <span className="truncate">Endereço: {budget.cliente.endereco_cliente}</span>}
+          <span>Fone: {budget.cliente.telefone_cliente || 'NÃO INFORMADO'}</span>
+          <span className="truncate">Endereço: {budget.cliente.endereco_cliente || 'NÃO INFORMADO'}</span>
         </div>
       </div>
 
-      {/* Tabela de Serviços - Flex Growing */}
-      <div className="flex-1 overflow-hidden flex flex-col mb-6 border border-black rounded-xl bg-white">
+      {/* Tabela de Serviços com Bordas */}
+      <div className="flex-1 overflow-hidden flex flex-col mb-4 border-2 border-black rounded-2xl bg-white">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="bg-black text-white">
@@ -94,56 +94,56 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
                 <td className="p-4 font-black text-black text-right tracking-tighter whitespace-nowrap">{item.valor}</td>
               </tr>
             ))}
-            <tr className="flex-1"><td colSpan={2}></td></tr>
+            {/* Espaçador flexível para empurrar o rodapé da tabela para baixo */}
+            <tr><td colSpan={2} className="h-full"></td></tr>
           </tbody>
         </table>
         
-        <div className="mt-auto p-6 bg-slate-50/50 border-t border-black/10">
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-4">
-              {prof?.formas_pagamento_aceitas && (
-                <div>
-                  <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1 opacity-60">Pagamento:</p>
-                  <p className="text-[12px] font-black text-black uppercase leading-tight">{prof.formas_pagamento_aceitas}</p>
-                </div>
-              )}
-              {prof?.condicoes_aceitas && (
-                <div>
-                  <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1 opacity-60">Condições e Termos:</p>
-                  <p className="text-[11px] text-black font-bold leading-snug">{prof.condicoes_aceitas}</p>
-                </div>
-              )}
-            </div>
-            <div className="flex flex-col gap-3 justify-end">
-               {hasObservation && (
-                <div className="p-3 bg-white rounded-lg border border-black/10">
-                  <p className="text-[8px] font-black text-black uppercase mb-1 tracking-widest opacity-50">Notas:</p>
-                  <p className="text-[10px] leading-tight text-black font-semibold">{budget.servico.observacoes_servico}</p>
-                </div>
-              )}
-            </div>
+        {/* Bloco de Notas e Termos dentro do quadro */}
+        <div className="mt-auto p-6 bg-slate-50/30 border-t-2 border-black/5">
+          <div className="space-y-4">
+            {prof?.formas_pagamento_aceitas && (
+              <div>
+                <p className="text-[9px] font-black text-black uppercase tracking-widest mb-1 opacity-60">Pagamento:</p>
+                <p className="text-[11px] font-black text-black uppercase leading-tight">{prof.formas_pagamento_aceitas}</p>
+              </div>
+            )}
+            {prof?.condicoes_aceitas && (
+              <div>
+                <p className="text-[9px] font-black text-black uppercase tracking-widest mb-1 opacity-60">Condições e Termos:</p>
+                <p className="text-[10px] text-black font-bold leading-snug">{prof.condicoes_aceitas}</p>
+              </div>
+            )}
+            {hasObservation && (
+              <div className="pt-2">
+                <p className="text-[8px] font-black text-black uppercase mb-1 tracking-widest opacity-50">Observações Extras:</p>
+                <p className="text-[10px] leading-tight text-black font-semibold italic">"{budget.servico.observacoes_servico}"</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Totais e Assinaturas */}
-      <div className="flex justify-between items-end mb-10 px-2 shrink-0">
-        <div className="w-1/3 text-center border-t border-black/20 pt-2">
-          <p className="text-[9px] font-black uppercase tracking-widest text-black/50">Aceite do Cliente</p>
+      {/* Totais e Assinatura */}
+      <div className="flex justify-between items-end mb-8 px-2 shrink-0">
+        <div className="w-1/3 text-center">
+          <div className="border-t border-black/30 pt-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-black/40">Aceite do Cliente</p>
+          </div>
         </div>
         
         <div className="text-right">
           <span className="text-[10px] font-black text-black uppercase tracking-widest block mb-1 opacity-60">Total do Orçamento</span>
-          <span className="text-5xl font-black text-black tracking-tighter leading-none">{budget.valores.valor_total}</span>
+          <span className="text-6xl font-black text-black tracking-tighter leading-none">{budget.valores.valor_total}</span>
         </div>
       </div>
 
-      {/* Rodapé Fixo */}
-      <div className="mt-auto border-t border-black pt-5 shrink-0">
+      {/* Rodapé Fixo e Contatos abaixo de tudo */}
+      <div className="mt-auto border-t-2 border-black pt-5 shrink-0">
         <div className="flex justify-between items-center text-[12px] font-black text-black uppercase tracking-widest">
-          <div className="flex gap-6">
-            <span>{prof?.telefone_profissional}</span>
-            <span>{prof?.email_profissional}</span>
+          <div className="flex gap-8">
+            <span className="flex items-center gap-1">{prof?.telefone_profissional}</span>
+            <span className="flex items-center gap-1">{prof?.email_profissional}</span>
           </div>
           <p className="opacity-40 tracking-[0.4em] text-[10px]">ORÇA FÁCIL</p>
         </div>
