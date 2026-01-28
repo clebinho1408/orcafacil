@@ -3,9 +3,15 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { ExtractedBudget } from "../types";
 
 export const extractBudgetData = async (text: string): Promise<ExtractedBudget | null> => {
-  // Use the API key exclusively from process.env.API_KEY as per guidelines
-  // This also avoids the ImportMeta error by using process.env
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  // A regra da API exige o uso exclusivo de process.env.API_KEY
+  const apiKey = process.env.API_KEY;
+  
+  if (!apiKey) {
+    console.error("Gemini API Key (process.env.API_KEY) não encontrada. Certifique-se de que a variável de ambiente se chama 'API_KEY' na Vercel.");
+    return null;
+  }
+
+  const ai = new GoogleGenAI({ apiKey });
   
   try {
     const response = await ai.models.generateContent({
@@ -41,7 +47,6 @@ export const extractBudgetData = async (text: string): Promise<ExtractedBudget |
       },
     });
 
-    // Access .text property directly as per guidelines
     const jsonStr = response.text?.trim() || "{}";
     const data = JSON.parse(jsonStr) as ExtractedBudget;
     
