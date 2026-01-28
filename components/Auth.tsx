@@ -24,38 +24,44 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
     telefone_profissional: ''
   });
 
+  // Tela de erro aprimorada
   if (!isCloudAvailable) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white p-8 rounded-[32px] shadow-xl border border-red-100 max-w-md text-center">
+        <div className="bg-white p-8 rounded-[32px] shadow-xl border border-red-100 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <AlertCircle className="w-8 h-8" />
           </div>
-          <h2 className="text-xl font-black text-slate-900 uppercase mb-4">Ajuste Necessário na Vercel</h2>
-          <p className="text-sm text-slate-500 font-bold uppercase leading-relaxed mb-6">
-            Detectamos que as seguintes chaves não estão chegando ao navegador:
-            <div className="mt-3 flex flex-wrap justify-center gap-2">
-              {missingVars.map(v => (
-                <span key={v} className="px-3 py-1 bg-red-100 text-red-600 rounded-lg text-[10px] font-black">{v}</span>
-              ))}
+          <h2 className="text-xl font-black text-slate-900 uppercase mb-4 tracking-tight">Conexão Pendente</h2>
+          
+          <div className="bg-red-50 p-4 rounded-2xl mb-6 text-left">
+            <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-3">Faltando no navegador:</p>
+            <div className="flex flex-wrap gap-2">
+              {missingVars.length > 0 ? missingVars.map(v => (
+                <span key={v} className="px-3 py-1 bg-white text-red-600 rounded-lg text-[10px] font-black border border-red-100 shadow-sm">{v}</span>
+              )) : <span className="text-[10px] font-bold text-red-600">Erro de inicialização do objeto process.env</span>}
             </div>
-          </p>
-          <div className="space-y-4 text-left">
+          </div>
+
+          <div className="space-y-4 text-left mb-8">
             <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-              <p className="text-[10px] font-black text-slate-400 uppercase mb-2">Como resolver:</p>
-              <ol className="text-[10px] font-bold text-slate-600 space-y-2 uppercase leading-tight">
-                <li>1. Verifique se os nomes na Vercel estão idênticos aos acima.</li>
-                <li>2. Importante: Vá em <span className="text-indigo-600">Deployments</span> na Vercel.</li>
-                <li>3. Clique nos "..." do último deploy e selecione <span className="text-indigo-600 font-black">REDEPLOY</span>.</li>
+              <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Ação Necessária:</p>
+              <ol className="text-[11px] font-bold text-slate-600 space-y-3 uppercase leading-tight">
+                <li className="flex gap-2"><span>1.</span><span>Vá em <span className="text-indigo-600">Deployments</span> na Vercel.</span></li>
+                <li className="flex gap-2"><span>2.</span><span>Clique no último item da lista (o mais recente).</span></li>
+                <li className="flex gap-2"><span>3.</span><span>Clique em <span className="text-indigo-600 font-black underline">REDEPLOY</span> para ativar as chaves.</span></li>
               </ol>
             </div>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-4 bg-indigo-600 text-white rounded-xl font-black text-xs uppercase flex items-center justify-center gap-2"
-            >
-              <RefreshCw className="w-4 h-4" /> Já fiz o Redeploy, recarregar
-            </button>
           </div>
+
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl"
+          >
+            <RefreshCw className="w-4 h-4" /> Já fiz o Redeploy, recarregar
+          </button>
+          
+          <p className="mt-6 text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">SaaS Orça Fácil • Versão Cloud</p>
         </div>
       </div>
     );
@@ -107,8 +113,8 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center flex flex-col items-center">
           <Logo className="w-24 h-24 mb-6 shadow-2xl rounded-[30%]" />
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">ORÇA FÁCIL</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">SaaS Profissional • Cloud</p>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">ORÇA FÁCIL</h1>
+          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">SaaS Profissional • Cloud Ready</p>
         </div>
 
         <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-100">
