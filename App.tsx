@@ -14,6 +14,7 @@ import ProfessionalForm from './components/ProfessionalForm';
 import Auth from './components/Auth';
 import Logo from './components/Logo';
 import { db } from './services/db';
+import { supabase } from './services/supabase';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'create' | 'history' | 'settings'>('create');
@@ -24,13 +25,34 @@ const App: React.FC = () => {
   const [isLoadingData, setIsLoadingData] = useState(false);
 
   useEffect(() => {
-    const savedSession = localStorage.getItem('orca_saas_session');
-    if (savedSession) {
-      const user = JSON.parse(savedSession);
-      setCurrentUser(user);
-      loadUserData(user.id);
+    // Sincronização em tempo real com o estado de autenticação do Supabase
+    const checkSession = async () => {
+      const user = await db.getCurrentUser();
+      if (user) {
+        setCurrentUser(user);
+        loadUserData(user.id);
+      }
+      setIsAuthChecking(false);
+    };
+
+    checkSession();
+
+    if (supabase) {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'SIGNED_IN' && session?.user) {
+          const user = await db.getCurrentUser();
+          if (user) {
+            setCurrentUser(user);
+            loadUserData(user.id);
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setCurrentUser(null);
+          setBudgets([]);
+        }
+      });
+
+      return () => subscription.unsubscribe();
     }
-    setIsAuthChecking(false);
   }, []);
 
   const loadUserData = async (userId: string) => {
@@ -49,14 +71,13 @@ const App: React.FC = () => {
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
-    localStorage.setItem('orca_saas_session', JSON.stringify(user));
     loadUserData(user.id);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     if (window.confirm('Deseja realmente sair?')) {
+      if (supabase) await supabase.auth.signOut();
       setCurrentUser(null);
-      localStorage.removeItem('orca_saas_session');
       setActiveTab('create');
     }
   };
@@ -65,7 +86,6 @@ const App: React.FC = () => {
     if (!currentUser) return;
     const updatedUser = { ...currentUser, ...data };
     setCurrentUser(updatedUser);
-    localStorage.setItem('orca_saas_session', JSON.stringify(updatedUser));
     
     try {
       await db.updateProfile(currentUser.id, data);
@@ -127,7 +147,13 @@ const App: React.FC = () => {
     }
   };
 
-  if (isAuthChecking) return null;
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return <Auth onLogin={handleLogin} />;
