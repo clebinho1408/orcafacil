@@ -33,11 +33,11 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
         if (user) {
           onLogin(user);
         } else {
-          setError('E-mail ou senha incorretos. Verifique seus dados.');
+          setError('E-mail ou senha incorretos.');
         }
       } else {
         const newUser: User = {
-          id: crypto.randomUUID(), // O Supabase gerará um ID real, mas enviamos um temporário
+          id: crypto.randomUUID(),
           email_profissional: formData.email,
           password: formData.password,
           nome_profissional: formData.nome_profissional,
@@ -52,11 +52,16 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
         if (registeredUser) {
           onLogin(registeredUser);
         } else {
-          setError('Erro ao criar conta. Este e-mail pode já estar em uso.');
+          setError('Erro ao criar conta. Verifique se o e-mail já existe.');
         }
       }
-    } catch (err) {
-      setError('Falha na conexão com o banco de dados. Verifique as credenciais do Supabase.');
+    } catch (err: any) {
+      console.error("Erro detalhado do Supabase:", err);
+      if (err.message?.includes("Configuração")) {
+        setError('Configuração ausente: Verifique SUPABASE_URL na Vercel.');
+      } else {
+        setError('Erro no banco de dados. Verifique o console do navegador.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -67,8 +72,8 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
       <div className="w-full max-w-md space-y-8">
         <div className="text-center flex flex-col items-center">
           <Logo className="w-24 h-24 mb-6 shadow-2xl rounded-[30%]" />
-          <h1 className="text-4xl font-black text-slate-900 tracking-tighter">ORÇA FÁCIL</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-xs mt-2">Sincronizado com Supabase</p>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase">ORÇA FÁCIL</h1>
+          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">SaaS Profissional • Cloud</p>
         </div>
 
         <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-100">
@@ -174,17 +179,13 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
                 <>
-                  {isLogin ? 'ACESSAR PAINEL' : 'CRIAR MINHA CONTA'}
+                  {isLogin ? 'ACESSAR PAINEL' : 'CRIAR CONTA'}
                   <ArrowRight className="w-6 h-6" />
                 </>
               )}
             </button>
           </form>
         </div>
-
-        <p className="text-center text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-          SaaS Profissional • Dados Salvos no Supabase
-        </p>
       </div>
     </div>
   );
