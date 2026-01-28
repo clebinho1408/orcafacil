@@ -109,12 +109,14 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
     return formatCurrency(total);
   };
 
+  // Melhoria no cálculo da escala de preview
   useEffect(() => {
     if (step === 'preview' && previewWrapperRef.current) {
       const updateScale = () => {
-        const containerWidth = previewWrapperRef.current?.offsetWidth || 0;
+        const containerWidth = previewWrapperRef.current?.clientWidth || 0;
         const a4WidthPx = 210 * 3.7795275591; // 210mm em pixels
-        const scale = (containerWidth - 32) / a4WidthPx;
+        // Adicionamos um respiro maior (40px) para não cortar nas bordas
+        const scale = (containerWidth - 40) / a4WidthPx;
         setPreviewScale(Math.min(scale, 1));
       };
       
@@ -297,22 +299,50 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
     if (isGeneratingPDF) return;
     setIsGeneratingPDF(true);
     setPdfBudget(budget);
-    await new Promise(r => setTimeout(r, 800));
+    
+    // Tempo maior para carregar imagens e logos
+    await new Promise(r => setTimeout(r, 1200));
+    
     const element = document.getElementById('pdf-content-to-capture');
     if (!element) { setIsGeneratingPDF(false); setPdfBudget(null); return; }
+    
     const opt = {
       margin: 0,
       filename: `Orcamento_${budget.cliente.nome_cliente || 'Cliente'}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2.5, useCORS: true, letterRendering: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+      html2canvas: { 
+        scale: 3, 
+        useCORS: true, 
+        letterRendering: true,
+        scrollX: 0,
+        scrollY: 0
+      },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
+
     try {
       const pdfBlob = await window.html2pdf().from(element).set(opt).output('blob');
       const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
-      if (navigator.share) await navigator.share({ files: [file], title: `Orçamento: ${budget.cliente.nome_cliente}` });
-      else { const url = URL.createObjectURL(pdfBlob); const link = document.createElement('a'); link.href = url; link.download = opt.filename; link.click(); }
-    } catch (err) { console.error(err); } finally { setIsGeneratingPDF(false); setPdfBudget(null); }
+      
+      if (navigator.share) {
+        await navigator.share({ 
+          files: [file], 
+          title: `Orçamento: ${budget.cliente.nome_cliente}` 
+        });
+      } else {
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = opt.filename;
+        link.click();
+      }
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      alert("Erro ao gerar PDF. Tente novamente.");
+    } finally {
+      setIsGeneratingPDF(false);
+      setPdfBudget(null);
+    }
   };
 
   const sendWhatsApp = (budget: Budget) => {
@@ -346,8 +376,9 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
 
   return (
     <div className="space-y-3 animate-in slide-in-from-bottom-4 duration-500 print:hidden flex flex-col min-h-full overflow-x-hidden">
-      <div className="pdf-render-wrapper">
-        <div id="pdf-content-to-capture" style={{ width: '210mm', height: '297mm' }}>
+      {/* Contêiner Invisível de Alta Fidelidade para Captura do PDF */}
+      <div className="pdf-render-wrapper" style={{ position: 'fixed', left: '-9999px', top: '0', width: '210mm', height: '297mm', overflow: 'hidden', zIndex: -100 }}>
+        <div id="pdf-content-to-capture">
           {pdfBudget && <BudgetPreview budget={pdfBudget} />}
         </div>
       </div>
@@ -550,15 +581,19 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
       )}
 
       {step === 'preview' && (
-        <div className="flex-1 flex flex-col min-h-0 animate-in zoom-in-95 relative overflow-hidden" ref={previewWrapperRef}>
-          <div className="bg-slate-200 rounded-xl border border-slate-300 shadow-inner overflow-auto p-4 mb-3 flex-1 flex flex-col items-center scroll-smooth">
-             <div style={{ 
-               height: `calc(297mm * ${previewScale})`, 
-               width: `calc(210mm * ${previewScale})`,
-               flexShrink: 0
-             }}>
+        <div className="flex-1 flex flex-col min-h-0 animate-in zoom-in-95 relative" ref={previewWrapperRef}>
+          <div className="bg-slate-200 rounded-xl border border-slate-300 shadow-inner overflow-auto p-4 mb-3 flex-1 flex flex-col items-center">
+             <div 
+               className="preview-outer-container shadow-2xl bg-white"
+               style={{ 
+                 height: `calc(297mm * ${previewScale})`, 
+                 width: `calc(210mm * ${previewScale})`,
+                 flexShrink: 0,
+                 overflow: 'hidden'
+               }}
+             >
                 <div 
-                  className="preview-scale-container origin-top-left shadow-2xl bg-white overflow-hidden" 
+                  className="preview-scale-container origin-top-left" 
                   style={{ transform: `scale(${previewScale})` }}
                 >
                   <BudgetPreview budget={{ 
