@@ -3,11 +3,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { ExtractedBudget } from "../types";
 
 export const extractBudgetData = async (text: string): Promise<ExtractedBudget | null> => {
-  // Tenta pegar a chave de API_KEY ou API_CHAVE (conforme print do usuário)
-  const apiKey = process.env.API_KEY || (process.env as any).API_CHAVE;
+  // Prioriza a chave que o usuário cadastrou como API_CHAVE no print
+  const apiKey = (process.env as any).API_CHAVE || process.env.API_KEY;
   
   if (!apiKey) {
-    console.error("Gemini API Key não encontrada nas variáveis de ambiente.");
+    console.error("Gemini API Key não encontrada. Verifique se API_CHAVE está configurada.");
     return null;
   }
 
@@ -50,7 +50,6 @@ export const extractBudgetData = async (text: string): Promise<ExtractedBudget |
     const jsonStr = response.text?.trim() || "{}";
     const data = JSON.parse(jsonStr) as ExtractedBudget;
     
-    // Higienização e padronização
     if (data.descricao_servico) {
       data.descricao_servico = data.descricao_servico
         .toUpperCase()

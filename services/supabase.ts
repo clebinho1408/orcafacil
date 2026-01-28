@@ -1,11 +1,18 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-// No navegador, process.env pode não estar definido globalmente. 
-// Tentamos acessar de forma segura.
 const getEnv = (key: string) => {
   try {
-    return process.env[key] || (window as any).process?.env?.[key] || null;
+    // Tenta process.env padrão (Vercel/Node)
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key];
+    }
+    // Tenta objeto global window.process (alguns runners)
+    if ((window as any).process?.env?.[key]) {
+      return (window as any).process.env[key];
+    }
+    // Caso especial para Vercel Edge/Client
+    return (import.meta as any).env?.[key] || null;
   } catch {
     return null;
   }
@@ -20,7 +27,6 @@ export const supabase = isConfigured
   ? createClient(supabaseUrl!, supabaseAnonKey!) 
   : null;
 
-// Exportamos para ajudar no debug do Auth
 export const missingVars = [
   !supabaseUrl && 'SUPABASE_URL',
   !supabaseAnonKey && 'SUPABASE_ANON_KEY'
