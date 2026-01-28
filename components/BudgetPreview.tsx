@@ -49,10 +49,10 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
             <h2 className="text-2xl font-black uppercase tracking-tighter text-black leading-none mb-1">
               {prof?.nome_profissional}
             </h2>
-            <p className="text-[10px] font-black text-black uppercase tracking-widest opacity-70">
+            <p className="text-[13px] font-black text-black uppercase tracking-widest opacity-80">
               CNPJ/CPF: {prof?.cpf_cnpj}
             </p>
-            <p className="text-[9px] font-bold text-black uppercase mt-1">
+            <p className="text-[12px] font-bold text-black uppercase mt-1 leading-tight opacity-90">
               {prof?.endereco_profissional}
             </p>
           </div>
@@ -62,17 +62,17 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
           <p className="text-xs font-black text-black uppercase tracking-[0.2em] mb-1">
             ORÇAMENTO N° {sequenceNumber}/{currentYear}
           </p>
-          <p className="text-[10px] font-bold text-black uppercase">Data: {budget.legal.data_orcamento}</p>
+          <p className="text-[11px] font-bold text-black uppercase">Data: {budget.legal.data_orcamento}</p>
         </div>
       </div>
 
       {/* Dados do Cliente */}
       <div className="mb-6 bg-slate-50 p-5 rounded-xl border border-black/5 shrink-0">
-        <label className="text-[8px] font-black uppercase text-black tracking-[0.2em] mb-1.5 block opacity-50">Cliente</label>
+        <label className="text-[9px] font-black uppercase text-black tracking-[0.2em] mb-1.5 block opacity-50">Cliente</label>
         <p className="text-xl font-black text-black uppercase leading-tight">
           {budget.cliente.nome_cliente || 'CLIENTE NÃO INFORMADO'}
         </p>
-        <div className="flex gap-4 mt-2 text-[10px] font-bold text-black uppercase">
+        <div className="flex gap-4 mt-2 text-[11px] font-bold text-black uppercase">
           {budget.cliente.telefone_cliente && <span>Fone: {budget.cliente.telefone_cliente}</span>}
           {budget.cliente.endereco_cliente && <span className="truncate">Endereço: {budget.cliente.endereco_cliente}</span>}
         </div>
@@ -83,8 +83,8 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
         <table className="w-full text-left text-xs border-collapse">
           <thead>
             <tr className="bg-black text-white">
-              <th className="p-4 font-black uppercase tracking-[0.1em] text-[9px]">Descrição detalhada do serviço</th>
-              <th className="p-4 font-black uppercase tracking-[0.1em] text-[9px] text-right w-32">Valor</th>
+              <th className="p-4 font-black uppercase tracking-[0.1em] text-[10px]">Descrição detalhada do serviço</th>
+              <th className="p-4 font-black uppercase tracking-[0.1em] text-[10px] text-right w-32">Valor</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-black/10">
@@ -94,38 +94,37 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
                 <td className="p-4 font-black text-black text-right tracking-tighter whitespace-nowrap">{item.valor}</td>
               </tr>
             ))}
-            {/* Linha invisível para preencher espaço se houver poucos itens */}
             <tr className="flex-1"><td colSpan={2}></td></tr>
           </tbody>
         </table>
         
         <div className="mt-auto p-6 bg-slate-50/50 border-t border-black/10">
           <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-3">
+            <div className="space-y-4">
               {prof?.formas_pagamento_aceitas && (
                 <div>
-                  <p className="text-[8px] font-black text-black uppercase tracking-widest mb-1 opacity-50">Pagamento:</p>
-                  <p className="text-[10px] font-black text-black uppercase">{prof.formas_pagamento_aceitas}</p>
+                  <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1 opacity-60">Pagamento:</p>
+                  <p className="text-[12px] font-black text-black uppercase leading-tight">{prof.formas_pagamento_aceitas}</p>
                 </div>
               )}
               {prof?.condicoes_aceitas && (
                 <div>
-                  <p className="text-[8px] font-black text-black uppercase tracking-widest mb-1 opacity-50">Condições:</p>
-                  <p className="text-[9px] text-black font-semibold leading-tight">{prof.condicoes_aceitas}</p>
+                  <p className="text-[10px] font-black text-black uppercase tracking-widest mb-1 opacity-60">Condições e Termos:</p>
+                  <p className="text-[11px] text-black font-bold leading-snug">{prof.condicoes_aceitas}</p>
                 </div>
               )}
             </div>
             <div className="flex flex-col gap-3 justify-end">
                {(budget.valores.valor_mao_de_obra || budget.valores.valor_material) && (
                  <div className="space-y-1 text-right mb-1">
-                    {budget.valores.valor_mao_de_obra && <p className="text-[9px] font-bold uppercase">Mão de Obra: {budget.valores.valor_mao_de_obra}</p>}
-                    {budget.valores.valor_material && <p className="text-[9px] font-bold uppercase">Material: {budget.valores.valor_material}</p>}
+                    {budget.valores.valor_mao_de_obra && <p className="text-[10px] font-bold uppercase">Mão de Obra: {budget.valores.valor_mao_de_obra}</p>}
+                    {budget.valores.valor_material && <p className="text-[10px] font-bold uppercase">Material: {budget.valores.valor_material}</p>}
                  </div>
                )}
                {hasObservation && (
                 <div className="p-3 bg-white rounded-lg border border-black/10">
-                  <p className="text-[7px] font-black text-black uppercase mb-1 tracking-widest opacity-50">Notas:</p>
-                  <p className="text-[9px] leading-tight text-black font-medium">{budget.servico.observacoes_servico}</p>
+                  <p className="text-[8px] font-black text-black uppercase mb-1 tracking-widest opacity-50">Notas:</p>
+                  <p className="text-[10px] leading-tight text-black font-semibold">{budget.servico.observacoes_servico}</p>
                 </div>
               )}
             </div>
@@ -136,23 +135,23 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
       {/* Totais e Assinaturas */}
       <div className="flex justify-between items-end mb-10 px-2 shrink-0">
         <div className="w-1/3 text-center border-t border-black/20 pt-2">
-          <p className="text-[8px] font-black uppercase tracking-widest text-black/50">Aceite do Cliente</p>
+          <p className="text-[9px] font-black uppercase tracking-widest text-black/50">Aceite do Cliente</p>
         </div>
         
         <div className="text-right">
-          <span className="text-[9px] font-black text-black uppercase tracking-widest block mb-1 opacity-60">Total do Orçamento</span>
+          <span className="text-[10px] font-black text-black uppercase tracking-widest block mb-1 opacity-60">Total do Orçamento</span>
           <span className="text-5xl font-black text-black tracking-tighter leading-none">{budget.valores.valor_total}</span>
         </div>
       </div>
 
-      {/* Rodapé Fixo na base do padding */}
-      <div className="mt-auto border-t border-black pt-4 shrink-0">
-        <div className="flex justify-between items-center text-[9px] font-black text-black uppercase tracking-widest">
-          <div className="flex gap-5">
+      {/* Rodapé Fixo */}
+      <div className="mt-auto border-t border-black pt-5 shrink-0">
+        <div className="flex justify-between items-center text-[12px] font-black text-black uppercase tracking-widest">
+          <div className="flex gap-6">
             <span>{prof?.telefone_profissional}</span>
             <span>{prof?.email_profissional}</span>
           </div>
-          <p className="opacity-30 tracking-[0.4em]">ORÇA FÁCIL</p>
+          <p className="opacity-40 tracking-[0.4em] text-[10px]">ORÇA FÁCIL</p>
         </div>
       </div>
     </div>

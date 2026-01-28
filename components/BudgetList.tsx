@@ -51,10 +51,18 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
   };
 
   const formatWhatsAppMessage = (budget: Budget) => {
-    const profName = professional?.nome_profissional || 'Empresa';
-    const profTel = professional?.telefone_profissional || '';
+    const prof = professional;
+    const profName = prof?.nome_profissional || 'Empresa';
 
-    let message = `*📄 ORÇAMENTO PROFISSIONAL - ${profName}*\n\n`;
+    let message = `*📄 ORÇAMENTO PROFISSIONAL*\n`;
+    message += `----------------------------------\n`;
+    message += `*EMPRESA:* ${profName}\n`;
+    if (prof?.cpf_cnpj) message += `*CNPJ/CPF:* ${prof.cpf_cnpj}\n`;
+    if (prof?.endereco_profissional) message += `*ENDEREÇO:* ${prof.endereco_profissional}\n`;
+    if (prof?.email_profissional) message += `*E-MAIL:* ${prof.email_profissional}\n`;
+    if (prof?.telefone_profissional) message += `*CONTATO:* ${prof.telefone_profissional}\n`;
+    message += `----------------------------------\n\n`;
+
     message += `Olá *${budget.cliente.nome_cliente || 'cliente'}*,\n`;
     message += `Seguem os detalhes do seu orçamento:\n\n`;
     
@@ -67,20 +75,19 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
       message += `*🛠️ SERVIÇO:* ${budget.servico.descricao_servico}\n`;
     }
 
-    if (professional?.formas_pagamento_aceitas) {
-      message += `*💳 PAGAMENTO:* ${professional.formas_pagamento_aceitas}\n`;
+    if (prof?.formas_pagamento_aceitas) {
+      message += `\n*💳 FORMA DE PAGAMENTO:* ${prof.formas_pagamento_aceitas}\n`;
     }
     
-    if (professional?.condicoes_aceitas) {
-      message += `\n*📋 CONDIÇÕES:* ${professional.condicoes_aceitas}\n`;
+    if (prof?.condicoes_aceitas) {
+      message += `*📋 CONDIÇÕES:* ${prof.condicoes_aceitas}\n`;
     }
     
     if (budget.servico.observacoes_servico) {
       message += `\n*📝 OBS:* ${budget.servico.observacoes_servico}\n`;
     }
     
-    message += `\n*💰 VALOR TOTAL:* _${budget.valores.valor_total}_\n\n`;
-    message += `📞 Contato: ${profTel}`;
+    message += `\n*💰 VALOR TOTAL:* _${budget.valores.valor_total}_\n`;
     
     return encodeURIComponent(message);
   };
@@ -150,7 +157,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onDelete, profes
 
   return (
     <div className="space-y-4 animate-in slide-in-from-right-4 duration-500 pb-20">
-      <div className="pdf-render-wrapper">
+      <div className="pdf-render-wrapper" style={{ position: 'fixed', left: '-9999px', top: '0', width: '210mm', height: '297mm', overflow: 'hidden', zIndex: -100 }}>
         <div id="pdf-content-to-capture" ref={pdfContainerRef}>
           {pdfBudget && <BudgetPreview budget={pdfBudget} />}
         </div>
