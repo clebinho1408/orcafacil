@@ -3,11 +3,11 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { ExtractedBudget } from "../types";
 
 export const extractBudgetData = async (text: string): Promise<ExtractedBudget | null> => {
-  // A regra da API exige o uso exclusivo de process.env.API_KEY
-  const apiKey = process.env.API_KEY;
+  // Verificação segura para evitar quebra se process não existir
+  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
   
   if (!apiKey) {
-    console.error("Gemini API Key (process.env.API_KEY) não encontrada. Certifique-se de que a variável de ambiente se chama 'API_KEY' na Vercel.");
+    console.error("Gemini API Key não encontrada em process.env.API_KEY");
     return null;
   }
 
