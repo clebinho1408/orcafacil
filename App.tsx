@@ -13,6 +13,7 @@ import BudgetList from './components/BudgetList';
 import ProfessionalForm from './components/ProfessionalForm';
 import Auth from './components/Auth';
 import Logo from './components/Logo';
+import ConfirmModal from './components/ConfirmModal';
 import { db } from './services/db';
 import { supabase } from './services/supabase';
 
@@ -23,9 +24,9 @@ const App: React.FC = () => {
   const [nextSequence, setNextSequence] = useState(1);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isLoadingData, setIsLoadingData] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
-    // Sincronização em tempo real com o estado de autenticação do Supabase
     const checkSession = async () => {
       const user = await db.getCurrentUser();
       if (user) {
@@ -74,12 +75,10 @@ const App: React.FC = () => {
     loadUserData(user.id);
   };
 
-  const handleLogout = async () => {
-    if (window.confirm('Deseja realmente sair?')) {
-      if (supabase) await supabase.auth.signOut();
-      setCurrentUser(null);
-      setActiveTab('create');
-    }
+  const performLogout = async () => {
+    if (supabase) await supabase.auth.signOut();
+    setCurrentUser(null);
+    setActiveTab('create');
   };
 
   const saveProfessional = async (data: any) => {
@@ -137,13 +136,11 @@ const App: React.FC = () => {
 
   const deleteBudget = async (id: string) => {
     if (!currentUser) return;
-    if (window.confirm('Deseja realmente excluir este orçamento?')) {
-      try {
-        await db.deleteBudget(id, currentUser.id);
-        setBudgets(budgets.filter(b => b.id_orcamento !== id));
-      } catch (e: any) {
-        alert(`Erro ao excluir: ${e.message}`);
-      }
+    try {
+      await db.deleteBudget(id, currentUser.id);
+      setBudgets(budgets.filter(b => b.id_orcamento !== id));
+    } catch (e: any) {
+      alert(`Erro ao excluir: ${e.message}`);
     }
   };
 
@@ -161,6 +158,16 @@ const App: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full overflow-hidden safe-top">
+      <ConfirmModal 
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={performLogout}
+        title="Deseja Sair?"
+        description="Você precisará entrar com seu e-mail e senha novamente para acessar seus orçamentos."
+        confirmLabel="Sair Agora"
+        variant="danger"
+      />
+
       <header className="bg-white px-6 pt-8 pb-6 border-b border-slate-100 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -173,7 +180,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <button 
-            onClick={handleLogout}
+            onClick={() => setShowLogoutModal(true)}
             className="w-10 h-10 rounded-xl bg-red-50 text-red-500 flex items-center justify-center border border-red-100 active:scale-90 transition-all"
           >
             <LogOut className="w-5 h-5" />

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import BudgetPreview from './BudgetPreview';
 import ReceiptPreview from './ReceiptPreview';
+import ConfirmModal from './ConfirmModal';
 
 interface Props {
   budgets: Budget[];
@@ -34,6 +35,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
   const [receiptValue, setReceiptValue] = useState<string>('');
   const [isGeneratingReceipt, setIsGeneratingReceipt] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [budgetToDelete, setBudgetToDelete] = useState<string | null>(null);
   
   const pdfContainerRef = useRef<HTMLDivElement>(null);
   const receiptContainerRef = useRef<HTMLDivElement>(null);
@@ -132,7 +134,6 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
     if (!receiptBudget || !receiptValue) return;
     setIsGeneratingReceipt(true);
     
-    // Atualiza o acumulado no banco de dados
     const currentPaidNow = parseCurrency(receiptValue);
     const alreadyPaid = parseCurrency(receiptBudget.valores.valor_pago_acumulado || '0');
     const newTotalPaid = formatCurrency(alreadyPaid + currentPaidNow);
@@ -166,6 +167,16 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
 
   return (
     <div className="space-y-4 animate-in slide-in-from-right-4 duration-500 pb-20">
+      <ConfirmModal 
+        isOpen={!!budgetToDelete}
+        onClose={() => setBudgetToDelete(null)}
+        onConfirm={() => budgetToDelete && onDelete(budgetToDelete)}
+        title="Excluir Orçamento?"
+        description="Esta ação é permanente e não poderá ser desfeita. O orçamento será removido da nuvem."
+        confirmLabel="Sim, Excluir"
+        variant="danger"
+      />
+
       <div className="pdf-render-wrapper" style={{ position: 'fixed', left: '-9999px', top: '0', width: '210mm', height: '297mm', overflow: 'hidden', zIndex: -100 }}>
         <div id="pdf-content-to-capture" ref={pdfContainerRef}>
           {pdfBudget && <BudgetPreview budget={pdfBudget} />}
@@ -290,9 +301,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                 </div>
               </div>
 
-              {/* Container de Ações de Duas Linhas */}
               <div className="flex flex-col gap-2.5 pt-4 border-t border-slate-50">
-                {/* Linha 1: Comunicação e Exportação */}
                 <div className="flex items-center gap-2">
                   <button onClick={() => handleWhatsApp(budget)} className="h-9 flex-1 bg-green-500 text-white rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase active:scale-95 transition-all">
                     <MessageCircle className="w-3.5 h-3.5 fill-current" /> Whats
@@ -317,7 +326,6 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                   )}
                 </div>
 
-                {/* Linha 2: Gestão de Status e Exclusão - CENTRALIZADOS */}
                 <div className="flex items-center justify-center gap-2">
                   {budget.status_orcamento === BudgetStatus.PENDENTE && (
                     <>
@@ -337,7 +345,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                   )}
 
                   <button 
-                    onClick={() => onDelete(budget.id_orcamento)} 
+                    onClick={() => setBudgetToDelete(budget.id_orcamento)} 
                     className="h-8 px-3 border border-slate-100 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase active:scale-95 transition-all"
                   >
                     <Trash2 className="w-3 h-3" /> Excluir
