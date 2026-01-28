@@ -317,8 +317,8 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                   )}
                 </div>
 
-                {/* Linha 2: Gestão de Status e Exclusão */}
-                <div className="flex items-center gap-2">
+                {/* Linha 2: Gestão de Status e Exclusão - CENTRALIZADOS */}
+                <div className="flex items-center justify-center gap-2">
                   {budget.status_orcamento === BudgetStatus.PENDENTE && (
                     <>
                       <button 
@@ -336,10 +336,9 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                     </>
                   )}
 
-                  {/* Botão Excluir alinhado à direita na segunda linha */}
                   <button 
                     onClick={() => onDelete(budget.id_orcamento)} 
-                    className="h-8 px-3 border border-slate-100 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase active:scale-95 transition-all ml-auto"
+                    className="h-8 px-3 border border-slate-100 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase active:scale-95 transition-all"
                   >
                     <Trash2 className="w-3 h-3" /> Excluir
                   </button>

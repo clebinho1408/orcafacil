@@ -134,7 +134,7 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
         
         <div className="text-right">
           <span className="text-[10px] font-black text-black uppercase tracking-widest block mb-1 opacity-60">Total do Orçamento</span>
-          <span className="text-6xl font-black text-black tracking-tighter leading-none">{budget.valores.valor_total}</span>
+          <span className="text-4xl font-black text-black tracking-tighter leading-none">{budget.valores.valor_total}</span>
         </div>
       </div>
 
