@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
+import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
 import { User } from '../types';
 import Logo from './Logo';
 import { db } from '../services/db';
@@ -24,44 +24,50 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
     telefone_profissional: ''
   });
 
-  // Tela de erro aprimorada
   if (!isCloudAvailable) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <div className="bg-white p-8 rounded-[32px] shadow-xl border border-red-100 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-red-50 text-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <AlertCircle className="w-8 h-8" />
+        <div className="bg-white p-10 rounded-[40px] shadow-2xl border border-red-100 max-w-md w-full text-center animate-in zoom-in-95 duration-500">
+          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+            <AlertCircle className="w-10 h-10" />
           </div>
-          <h2 className="text-xl font-black text-slate-900 uppercase mb-4 tracking-tight">Conexão Pendente</h2>
           
-          <div className="bg-red-50 p-4 rounded-2xl mb-6 text-left">
-            <p className="text-[10px] font-black text-red-400 uppercase tracking-widest mb-3">Faltando no navegador:</p>
-            <div className="flex flex-wrap gap-2">
-              {missingVars.length > 0 ? missingVars.map(v => (
-                <span key={v} className="px-3 py-1 bg-white text-red-600 rounded-lg text-[10px] font-black border border-red-100 shadow-sm">{v}</span>
-              )) : <span className="text-[10px] font-bold text-red-600">Erro de inicialização do objeto process.env</span>}
+          <h2 className="text-2xl font-black text-slate-900 uppercase mb-4 tracking-tighter">Ativação Necessária</h2>
+          <p className="text-slate-500 font-bold text-xs uppercase mb-8 leading-relaxed">
+            As chaves foram configuradas, mas o site ainda não as "leu". <br/>
+            Siga estes <span className="text-red-500">3 PASSOS</span> rápidos:
+          </p>
+
+          <div className="space-y-4 text-left mb-10">
+            <div className="flex gap-4 items-start">
+              <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-1">1</div>
+              <p className="text-xs font-bold text-slate-700 uppercase leading-tight">Vá na aba <span className="text-indigo-600">Deployments</span> na Vercel.</p>
+            </div>
+            <div className="flex gap-4 items-start">
+              <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-1">2</div>
+              <p className="text-xs font-bold text-slate-700 uppercase leading-tight">Clique nos <span className="text-indigo-600">"..."</span> do deploy mais recente (o primeiro da lista).</p>
+            </div>
+            <div className="flex gap-4 items-start">
+              <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-1">3</div>
+              <p className="text-xs font-bold text-slate-700 uppercase leading-tight">Selecione <span className="bg-indigo-600 text-white px-2 py-0.5 rounded ml-1 tracking-widest">REDEPLOY</span> e confirme.</p>
             </div>
           </div>
 
-          <div className="space-y-4 text-left mb-8">
-            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-              <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">Ação Necessária:</p>
-              <ol className="text-[11px] font-bold text-slate-600 space-y-3 uppercase leading-tight">
-                <li className="flex gap-2"><span>1.</span><span>Vá em <span className="text-indigo-600">Deployments</span> na Vercel.</span></li>
-                <li className="flex gap-2"><span>2.</span><span>Clique no último item da lista (o mais recente).</span></li>
-                <li className="flex gap-2"><span>3.</span><span>Clique em <span className="text-indigo-600 font-black underline">REDEPLOY</span> para ativar as chaves.</span></li>
-              </ol>
-            </div>
+          <div className="space-y-3">
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl shadow-indigo-200"
+            >
+              <RefreshCw className="w-5 h-5" /> Já fiz o Redeploy, atualizar
+            </button>
+            <a 
+              href="https://vercel.com/clebinho1408/orcafacil/deployments" 
+              target="_blank"
+              className="flex items-center justify-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors py-2"
+            >
+              Abrir Painel Vercel <ExternalLink className="w-3 h-3" />
+            </a>
           </div>
-
-          <button 
-            onClick={() => window.location.reload()}
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-xs uppercase flex items-center justify-center gap-2 active:scale-95 transition-all shadow-xl"
-          >
-            <RefreshCw className="w-4 h-4" /> Já fiz o Redeploy, recarregar
-          </button>
-          
-          <p className="mt-6 text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">SaaS Orça Fácil • Versão Cloud</p>
         </div>
       </div>
     );
@@ -101,7 +107,6 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
         }
       }
     } catch (err: any) {
-      console.error("Erro no Auth:", err);
       setError('Erro de conexão com o banco de dados.');
     } finally {
       setIsLoading(false);
@@ -114,7 +119,7 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
         <div className="text-center flex flex-col items-center">
           <Logo className="w-24 h-24 mb-6 shadow-2xl rounded-[30%]" />
           <h1 className="text-4xl font-black text-slate-900 tracking-tighter uppercase leading-none">ORÇA FÁCIL</h1>
-          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">SaaS Profissional • Cloud Ready</p>
+          <p className="text-slate-500 font-bold uppercase tracking-widest text-[10px] mt-2">Profissional • Cloud Ready</p>
         </div>
 
         <div className="bg-white p-8 rounded-[32px] shadow-xl border border-slate-100">
@@ -220,7 +225,7 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
                 <Loader2 className="w-6 h-6 animate-spin" />
               ) : (
                 <>
-                  {isLogin ? 'ACESSAR CONTA' : 'CRIAR MINHA CONTA'}
+                  {isLogin ? 'ACESSAR CONTA' : 'CRIAR CONTA'}
                   <ArrowRight className="w-6 h-6" />
                 </>
               )}
