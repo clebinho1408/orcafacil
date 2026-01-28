@@ -67,8 +67,12 @@ const App: React.FC = () => {
     setCurrentUser(updatedUser);
     localStorage.setItem('orca_saas_session', JSON.stringify(updatedUser));
     
-    await db.updateProfile(currentUser.id, data);
-    alert('Dados atualizados com sucesso!');
+    try {
+      await db.updateProfile(currentUser.id, data);
+      alert('Dados atualizados com sucesso!');
+    } catch (e: any) {
+      alert(`Erro ao atualizar perfil: ${e.message}`);
+    }
   };
 
   const addBudget = async (budget: Budget) => {
@@ -85,20 +89,29 @@ const App: React.FC = () => {
       setBudgets([budgetWithUser, ...budgets]);
       setNextSequence(nextSequence + 1);
       setActiveTab('history');
-    } catch (e) {
-      alert("Erro ao salvar orçamento no banco de dados.");
+    } catch (e: any) {
+      console.error("Falha ao salvar:", e);
+      alert(`Erro ao salvar: ${e.message}`);
     }
   };
 
   const updateBudgetStatus = async (id: string, status: BudgetStatus) => {
-    await db.updateBudgetStatus(id, status);
-    setBudgets(budgets.map(b => b.id_orcamento === id ? { ...b, status_orcamento: status } : b));
+    try {
+      await db.updateBudgetStatus(id, status);
+      setBudgets(budgets.map(b => b.id_orcamento === id ? { ...b, status_orcamento: status } : b));
+    } catch (e: any) {
+      alert(`Erro ao atualizar status: ${e.message}`);
+    }
   };
 
   const deleteBudget = async (id: string) => {
     if (window.confirm('Deseja realmente excluir este orçamento?')) {
-      await db.deleteBudget(id);
-      setBudgets(budgets.filter(b => b.id_orcamento !== id));
+      try {
+        await db.deleteBudget(id);
+        setBudgets(budgets.filter(b => b.id_orcamento !== id));
+      } catch (e: any) {
+        alert(`Erro ao excluir: ${e.message}`);
+      }
     }
   };
 
@@ -119,7 +132,7 @@ const App: React.FC = () => {
               <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
                 ORÇA FÁCIL
               </h1>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">SaaS de Orçamentos por Voz</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Orçamento gerado por Voz</p>
             </div>
           </div>
           <button 

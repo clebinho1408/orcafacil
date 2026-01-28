@@ -14,6 +14,11 @@ const getEnv = (name: string): string | undefined => {
       // @ts-ignore
       return import.meta.env[name];
     }
+    // Fallback para nomes comuns sem prefixo VITE_ (integração Vercel automática)
+    const baseName = name.replace('VITE_', '');
+    if (typeof process !== 'undefined' && process.env && process.env[baseName]) {
+      return process.env[baseName];
+    }
   } catch (e) {
     console.warn(`Erro ao acessar variável ${name}:`, e);
   }
@@ -24,6 +29,10 @@ const supabaseUrl = getEnv('VITE_SUPABASE_URL');
 const supabaseAnonKey = getEnv('VITE_SUPABASE_ANON_KEY');
 
 export const isConfigured = !!(supabaseUrl && supabaseAnonKey);
+
+if (!isConfigured) {
+  console.warn("Supabase não está configurado. Verifique VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY no Vercel.");
+}
 
 export const supabase = isConfigured 
   ? createClient(supabaseUrl!, supabaseAnonKey!) 
