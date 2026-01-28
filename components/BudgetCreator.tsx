@@ -197,7 +197,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
         setStep('details');
       }
     } else { 
-      // Fallback simples sem IA
+      // Fallback e mensagem de erro mais detalhada
       if (step === 'voice_client') {
         setClient(prev => ({ ...prev, nome_cliente: transcript.toUpperCase() }));
         setTranscript('');
@@ -207,7 +207,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
         setTranscript('');
         setStep('details');
       } else {
-        alert("Não conseguimos processar o áudio. Tente falar o serviço e o valor claramente."); 
+        alert("Não conseguimos processar via IA. Verifique se a chave do Gemini está configurada no Vercel ou tente falar mais claramente."); 
       }
     }
   };
@@ -366,7 +366,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
       )}
 
       {step !== 'finished' && (
-        <div className="flex items-center justify-between bg-white px-3 py-2 rounded-2xl shadow-sm border border-slate-100 shrink-0 mb-1">
+        <div className="flex items-center justify-between bg-white px-3 py-2 rounded-lg shadow-sm border border-slate-100 shrink-0 mb-1">
           <div className="flex flex-1 items-center gap-2">
             <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${currentStatusIndex === 0 ? 'bg-indigo-600 text-white' : 'bg-green-100 text-green-600'}`}>{currentStatusIndex > 0 ? <Check className="w-3 h-3" /> : '1'}</div>
             <span className="text-[9px] font-bold text-slate-400 hidden sm:inline uppercase tracking-widest">Voz</span>
@@ -385,7 +385,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
       )}
 
       {(step.startsWith('voice_')) && (
-        <div className="flex flex-col items-center py-4 bg-white rounded-3xl shadow-sm border border-slate-100 relative overflow-hidden flex-1 max-h-[75vh]">
+        <div className="flex flex-col items-center py-4 bg-white rounded-2xl shadow-sm border border-slate-100 relative overflow-hidden flex-1 max-h-[75vh]">
           {items.length > 0 && step === 'voice_services' && (
             <div className="absolute top-2 right-3 bg-indigo-50 text-indigo-600 px-3 py-1 rounded-full flex items-center gap-2 animate-bounce">
               <ListPlus className="w-3 h-3" />
@@ -409,7 +409,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
           </div>
 
           <div className="w-full px-5 mb-3 flex-1 overflow-hidden flex flex-col">
-            <div className={`p-3 rounded-2xl flex-1 border-2 transition-all overflow-y-auto ${isRecording ? 'bg-indigo-50 border-indigo-200 border-dashed' : 'bg-slate-50 border-slate-200'}`}>
+            <div className={`p-3 rounded-xl flex-1 border-2 transition-all overflow-y-auto ${isRecording ? 'bg-indigo-50 border-indigo-200 border-dashed' : 'bg-slate-50 border-slate-200'}`}>
                <textarea 
                   className="w-full h-full bg-transparent outline-none resize-none text-sm font-medium" 
                   value={transcript} 
@@ -438,28 +438,28 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
 
       {step === 'details' && (
         <div className="space-y-3 animate-in slide-in-from-right-4 overflow-x-hidden flex-1 pb-24">
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
             <div className="flex items-center gap-2 mb-3 text-indigo-600"><UserPlus className="w-3.5 h-3.5" /><h3 className="font-bold uppercase text-[9px] tracking-widest">Informações do Cliente</h3></div>
             <div className="space-y-2">
-              <input className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs w-full font-black uppercase" placeholder="Nome Completo" value={client.nome_cliente} onChange={e => setClient({ ...client, nome_cliente: e.target.value.toUpperCase() })} />
+              <input className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs w-full font-black uppercase" placeholder="Nome Completo" value={client.nome_cliente} onChange={e => setClient({ ...client, nome_cliente: e.target.value.toUpperCase() })} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                  <input className="p-3 pl-9 bg-slate-50 rounded-xl border border-slate-200 text-xs w-full" placeholder="WhatsApp" value={client.telefone_cliente} onChange={e => setClient({ ...client, telefone_cliente: e.target.value })} />
+                  <input className="p-3 pl-9 bg-slate-50 rounded-lg border border-slate-200 text-xs w-full" placeholder="WhatsApp" value={client.telefone_cliente} onChange={e => setClient({ ...client, telefone_cliente: e.target.value })} />
                 </div>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                  <input className="p-3 pl-9 bg-slate-50 rounded-xl border border-slate-200 text-xs w-full uppercase" placeholder="Endereço" value={client.endereco_cliente} onChange={e => setClient({ ...client, endereco_cliente: e.target.value.toUpperCase() })} />
+                  <input className="p-3 pl-9 bg-slate-50 rounded-lg border border-slate-200 text-xs w-full uppercase" placeholder="Endereço" value={client.endereco_cliente} onChange={e => setClient({ ...client, endereco_cliente: e.target.value.toUpperCase() })} />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+          <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
             <div className="flex items-center gap-2 mb-3 text-indigo-600"><Package className="w-3.5 h-3.5" /><h3 className="font-bold uppercase text-[9px] tracking-widest">Serviços e Valores</h3></div>
             <div className="space-y-2 mb-3">
               {items.map((item, idx) => (
-                <div key={idx} className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <div key={idx} className="flex flex-col gap-1.5 p-3 bg-slate-50 rounded-lg border border-slate-200">
                   <div className="flex items-start justify-between">
                     <input 
                       className="w-full bg-transparent font-black text-[11px] uppercase outline-none" 
@@ -476,7 +476,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
                   </div>
                   <div className="flex items-center justify-between">
                     <input 
-                      className="w-28 bg-white px-2 py-1.5 rounded-lg font-black text-indigo-600 text-[11px] border border-slate-100" 
+                      className="w-28 bg-white px-2 py-1.5 rounded-md font-black text-indigo-600 text-[11px] border border-slate-100" 
                       value={item.valor} 
                       onChange={e => {
                         const newItems = [...items];
@@ -493,15 +493,15 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
             <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100">
               <div className="space-y-1">
                 <label className="text-[8px] font-black text-slate-400 uppercase">Mão de Obra</label>
-                <input className="w-full p-2 bg-slate-50 rounded-lg border border-slate-200 text-xs font-bold" value={values.valor_mao_de_obra} onChange={e => setValues({...values, valor_mao_de_obra: e.target.value})} placeholder="R$ 0,00" />
+                <input className="w-full p-2 bg-slate-50 rounded-md border border-slate-200 text-xs font-bold" value={values.valor_mao_de_obra} onChange={e => setValues({...values, valor_mao_de_obra: e.target.value})} placeholder="R$ 0,00" />
               </div>
               <div className="space-y-1">
                 <label className="text-[8px] font-black text-slate-400 uppercase">Material</label>
-                <input className="w-full p-2 bg-slate-50 rounded-lg border border-slate-200 text-xs font-bold" value={values.valor_material} onChange={e => setValues({...values, valor_material: e.target.value})} placeholder="R$ 0,00" />
+                <input className="w-full p-2 bg-slate-50 rounded-md border border-slate-200 text-xs font-bold" value={values.valor_material} onChange={e => setValues({...values, valor_material: e.target.value})} placeholder="R$ 0,00" />
               </div>
             </div>
 
-            <div className="mt-4 flex items-center justify-between bg-green-50 p-3 rounded-xl border border-green-100">
+            <div className="mt-4 flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-100">
                 <label className="text-[10px] font-black text-green-700 uppercase tracking-widest">Valor Total</label>
                 <input className="w-32 bg-transparent text-right font-black text-green-700 text-lg outline-none" value={values.valor_total} onChange={e => setValues({ ...values, valor_total: e.target.value })} />
             </div>
@@ -520,7 +520,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
 
       {step === 'preview' && (
         <div className="flex-1 flex flex-col min-h-0 animate-in zoom-in-95" ref={previewWrapperRef}>
-          <div className="bg-slate-200 rounded-2xl border border-slate-300 shadow-inner overflow-y-auto p-2 mb-3 min-h-[350px] flex justify-center scroll-smooth">
+          <div className="bg-slate-200 rounded-xl border border-slate-300 shadow-inner overflow-y-auto p-2 mb-3 min-h-[350px] flex justify-center scroll-smooth">
              <div style={{ 
                height: `calc(297mm * ${previewScale})`, 
                width: `calc(210mm * ${previewScale})`, 
@@ -564,7 +564,7 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
       )}
 
       {step === 'finished' && lastBudget && (
-        <div className="flex flex-col items-center py-8 bg-white rounded-3xl shadow-xl border-4 border-indigo-50 animate-in zoom-in-90 mb-20 flex-1 justify-center">
+        <div className="flex flex-col items-center py-8 bg-white rounded-2xl shadow-xl border-4 border-indigo-50 animate-in zoom-in-90 mb-20 flex-1 justify-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600"><Check className="w-10 h-10" /></div>
           <h2 className="text-2xl font-black mb-8 text-slate-900 text-center px-4 uppercase tracking-tighter leading-none">ORÇAMENTO GERADO!</h2>
           <div className="w-full px-8 flex flex-col gap-3">

@@ -2,12 +2,36 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { ExtractedBudget } from "../types";
 
+// Função robusta para capturar a chave de API em diferentes ambientes (Vercel, Vite, etc)
+const getApiKey = (): string | undefined => {
+  try {
+    // Tenta process.env (Vercel/Node)
+    if (typeof process !== 'undefined' && process.env && process.env.API_KEY) {
+      return process.env.API_KEY;
+    }
+    // Tenta import.meta.env (Vite)
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_KEY) {
+      // @ts-ignore
+      return import.meta.env.VITE_API_KEY;
+    }
+    // Fallback para window (alguns ambientes injetam aqui)
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.API_KEY) {
+      // @ts-ignore
+      return window.API_KEY;
+    }
+  } catch (e) {
+    console.warn("Erro ao tentar acessar API_KEY:", e);
+  }
+  return undefined;
+};
+
 export const extractBudgetData = async (text: string): Promise<ExtractedBudget | null> => {
-  // Verificação segura para evitar quebra se process não existir
-  const apiKey = typeof process !== 'undefined' ? process.env.API_KEY : undefined;
+  const apiKey = getApiKey();
   
   if (!apiKey) {
-    console.error("Gemini API Key não encontrada em process.env.API_KEY");
+    console.error("ERRO: Gemini API Key não encontrada. Certifique-se de configurar a variável de ambiente API_KEY no Vercel.");
     return null;
   }
 
@@ -47,9 +71,15 @@ export const extractBudgetData = async (text: string): Promise<ExtractedBudget |
       },
     });
 
-    const jsonStr = response.text?.trim() || "{}";
+    if (!response.text) {
+      console.warn("Gemini retornou uma resposta vazia.");
+      return null;
+    }
+
+    const jsonStr = response.text.trim();
     const data = JSON.parse(jsonStr) as ExtractedBudget;
     
+    // Pós-processamento para garantir maiúsculas e formatação de m2
     if (data.descricao_servico) {
       data.descricao_servico = data.descricao_servico
         .toUpperCase()
@@ -62,8 +92,12 @@ export const extractBudgetData = async (text: string): Promise<ExtractedBudget |
     }
     
     return data;
-  } catch (error) {
-    console.error("Erro no Gemini:", error);
+  } catch (error: any) {
+    console.error("Erro detalhado no Gemini:", error);
+    // Log para ajudar o usuário a diagnosticar no console do navegador
+    if (error.message?.includes("API_KEY_INVALID")) {
+      console.error("A chave de API fornecida é inválida.");
+    }
     return null;
   }
 };
