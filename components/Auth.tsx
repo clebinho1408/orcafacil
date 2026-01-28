@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, RefreshCw, ExternalLink } from 'lucide-react';
+import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, RefreshCw, ExternalLink, ShieldAlert } from 'lucide-react';
 import { User } from '../types';
 import Logo from './Logo';
 import { db } from '../services/db';
@@ -28,46 +28,58 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
         <div className="bg-white p-10 rounded-[40px] shadow-2xl border border-red-100 max-w-md w-full text-center animate-in zoom-in-95 duration-500">
-          <div className="w-20 h-20 bg-red-50 text-red-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
-            <AlertCircle className="w-10 h-10" />
+          <div className="w-20 h-20 bg-amber-50 text-amber-500 rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-inner">
+            <ShieldAlert className="w-10 h-10" />
           </div>
           
-          <h2 className="text-2xl font-black text-slate-900 uppercase mb-4 tracking-tighter">Ativação Necessária</h2>
-          <p className="text-slate-500 font-bold text-xs uppercase mb-8 leading-relaxed">
-            As chaves foram configuradas, mas o site ainda não as "leu". <br/>
-            Siga estes <span className="text-red-500">3 PASSOS</span> rápidos:
-          </p>
+          <h2 className="text-2xl font-black text-slate-900 uppercase mb-2 tracking-tighter">Erro de Prefixo</h2>
+          <p className="text-slate-500 font-bold text-[10px] uppercase mb-8 tracking-[0.2em]">Regra de Segurança do Vite</p>
 
-          <div className="space-y-4 text-left mb-10">
-            <div className="flex gap-4 items-start">
+          <div className="bg-red-50 p-6 rounded-3xl mb-8 text-left border border-red-100">
+            <p className="text-[11px] font-black text-red-600 uppercase mb-4 leading-tight">
+              A Vercel exige que os nomes comecem com <span className="underline">VITE_</span> para funcionarem:
+            </p>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 bg-white p-3 rounded-xl border border-red-100 shadow-sm">
+                <span className="text-[9px] font-black text-slate-400 line-through">SUPABASE_URL</span>
+                <ArrowRight className="w-3 h-3 text-red-400" />
+                <span className="text-[10px] font-black text-green-600 tracking-tight">VITE_SUPABASE_URL</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white p-3 rounded-xl border border-red-100 shadow-sm">
+                <span className="text-[9px] font-black text-slate-400 line-through">SUPABASE_ANON_KEY</span>
+                <ArrowRight className="w-3 h-3 text-red-400" />
+                <span className="text-[10px] font-black text-green-600 tracking-tight">VITE_SUPABASE_ANON_KEY</span>
+              </div>
+              <div className="flex items-center gap-2 bg-white p-3 rounded-xl border border-red-100 shadow-sm">
+                <span className="text-[9px] font-black text-slate-400 line-through">API_CHAVE</span>
+                <ArrowRight className="w-3 h-3 text-red-400" />
+                <span className="text-[10px] font-black text-green-600 tracking-tight">VITE_API_CHAVE</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4 mb-10">
+            <p className="text-[11px] font-bold text-slate-500 uppercase">Após renomear as 3 chaves na Vercel:</p>
+            <div className="flex gap-4 items-start text-left">
               <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-1">1</div>
-              <p className="text-xs font-bold text-slate-700 uppercase leading-tight">Vá na aba <span className="text-indigo-600">Deployments</span> na Vercel.</p>
-            </div>
-            <div className="flex gap-4 items-start">
-              <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-1">2</div>
-              <p className="text-xs font-bold text-slate-700 uppercase leading-tight">Clique nos <span className="text-indigo-600">"..."</span> do deploy mais recente (o primeiro da lista).</p>
-            </div>
-            <div className="flex gap-4 items-start">
-              <div className="w-6 h-6 rounded-full bg-slate-900 text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-1">3</div>
-              <p className="text-xs font-bold text-slate-700 uppercase leading-tight">Selecione <span className="bg-indigo-600 text-white px-2 py-0.5 rounded ml-1 tracking-widest">REDEPLOY</span> e confirme.</p>
+              <p className="text-xs font-bold text-slate-700 uppercase leading-tight">Vá em <span className="text-indigo-600">Deployments</span>, clique nos <span className="text-indigo-600">"..."</span> e escolha <span className="font-black">REDEPLOY</span>.</p>
             </div>
           </div>
 
-          <div className="space-y-3">
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 active:scale-95 transition-all shadow-xl shadow-indigo-200"
-            >
-              <RefreshCw className="w-5 h-5" /> Já fiz o Redeploy, atualizar
-            </button>
-            <a 
-              href="https://vercel.com/clebinho1408/orcafacil/deployments" 
-              target="_blank"
-              className="flex items-center justify-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors py-2"
-            >
-              Abrir Painel Vercel <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-sm uppercase flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all"
+          >
+            <RefreshCw className="w-5 h-5" /> Já renomeei e fiz Redeploy
+          </button>
+          
+          <a 
+            href="https://vercel.com/clebinho1408/orcafacil/settings/environment-variables" 
+            target="_blank"
+            className="flex items-center justify-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-indigo-600 transition-colors py-4 mt-2"
+          >
+            Abrir Configurações Vercel <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
       </div>
     );
