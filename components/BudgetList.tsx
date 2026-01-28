@@ -249,13 +249,13 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
         </div>
       )}
 
-      <div className="flex flex-col gap-4 mb-6">
-        <h2 className="text-2xl font-black uppercase tracking-tighter">Meus Orçamentos</h2>
+      <div className="flex flex-col gap-4 mb-6 px-1">
+        <h2 className="text-2xl font-black uppercase tracking-tighter">Histórico</h2>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input 
             type="text"
-            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-200 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+            className="w-full pl-12 pr-4 py-4 bg-white rounded-2xl border border-slate-100 shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium text-sm"
             placeholder="Pesquisar cliente ou número..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -263,58 +263,64 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
         </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {filteredBudgets.map((budget) => (
-          <div key={budget.id_orcamento} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm group">
+          <div key={budget.id_orcamento} className="bg-white p-5 rounded-3xl border border-slate-50 shadow-sm">
             <div className="flex flex-col gap-4">
               <div className="flex gap-4">
-                <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 relative">
-                  <FileText className="w-7 h-7" />
-                  <div className="absolute -top-1 -right-1 bg-indigo-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white">
+                <div className="w-12 h-12 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 shrink-0 relative">
+                  <FileText className="w-6 h-6" />
+                  <div className="absolute -top-1 -right-1 bg-black text-white w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black border-2 border-white">
                     {budget.numero_sequencial}
                   </div>
                 </div>
-                <div className="overflow-hidden">
-                  <h3 className="font-black text-slate-900 text-lg uppercase leading-tight truncate">
+                <div className="overflow-hidden flex-1">
+                  <h3 className="font-black text-slate-900 text-base uppercase leading-tight truncate">
                     {budget.servico.items && budget.servico.items.length > 0 ? budget.servico.items[0].descricao : budget.servico.descricao_servico}
                   </h3>
-                  <p className="text-sm text-slate-500 font-bold mt-0.5 truncate uppercase">Cliente: {budget.cliente.nome_cliente || 'Consumidor'}</p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="text-sm font-black text-indigo-600">{budget.valores.valor_total}</span>
-                    <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${getStatusColor(budget.status_orcamento)}`}>
+                  <p className="text-[11px] text-slate-400 font-bold mt-0.5 truncate uppercase tracking-tight">
+                    {budget.cliente.nome_cliente || 'Consumidor'}
+                  </p>
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-xs font-black text-indigo-600">{budget.valores.valor_total}</span>
+                    <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${getStatusColor(budget.status_orcamento)}`}>
                       {budget.status_orcamento}
                     </span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 pt-2">
-                <button onClick={() => handleWhatsApp(budget)} className="bg-green-600 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95">
-                  <MessageCircle className="w-4 h-4 fill-current" /> Whats
+              {/* Linha de Ações - Alinhada e Discreta */}
+              <div className="flex items-center gap-2 pt-3 border-t border-slate-50">
+                <button onClick={() => handleWhatsApp(budget)} className="h-8 px-3 bg-green-500 text-white rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase active:scale-95 transition-all">
+                  <MessageCircle className="w-3.5 h-3.5 fill-current" /> Whats
                 </button>
-                <button onClick={() => handleShareBudget(budget)} disabled={generatingId === budget.id_orcamento} className="bg-white border-2 border-slate-900 text-slate-900 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95">
-                  {generatingId === budget.id_orcamento ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />} PDF
+                
+                <button onClick={() => handleShareBudget(budget)} disabled={generatingId === budget.id_orcamento} className="h-8 px-3 bg-slate-900 text-white rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase active:scale-95 transition-all">
+                  {generatingId === budget.id_orcamento ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
                 </button>
 
-                {/* Botões de Ação para Orçamentos Pendentes */}
+                <div className="h-4 w-[1px] bg-slate-100 mx-1" />
+
+                {/* Botões de Status - Pequenos e Discretos */}
                 {budget.status_orcamento === BudgetStatus.PENDENTE && (
                   <>
                     <button 
                       onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.APROVADO)}
-                      className="bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95 transition-all"
+                      className="h-8 px-2 border border-green-100 text-green-600 hover:bg-green-50 rounded-lg flex items-center gap-1 text-[9px] font-black uppercase active:scale-95 transition-all"
                     >
-                      <CheckCircle className="w-4 h-4" /> Aprovar
+                      <CheckCircle className="w-3 h-3" /> Aprovar
                     </button>
                     <button 
                       onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.RECUSADO)}
-                      className="bg-red-50 text-red-700 border border-red-200 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95 transition-all"
+                      className="h-8 px-2 border border-red-50 text-red-400 hover:bg-red-50 rounded-lg flex items-center gap-1 text-[9px] font-black uppercase active:scale-95 transition-all"
                     >
-                      <XCircle className="w-4 h-4" /> Recusar
+                      <XCircle className="w-3 h-3" /> Recusar
                     </button>
                   </>
                 )}
 
-                {/* Botão de Recibo para Orçamentos Aprovados */}
+                {/* Botão de Recibo Discreto */}
                 {budget.status_orcamento === BudgetStatus.APROVADO && (
                   <button 
                     onClick={() => { 
@@ -323,19 +329,29 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                       const paidNum = parseCurrency(budget.valores.valor_pago_acumulado || '0');
                       setReceiptValue(formatCurrency(totalNum - paidNum)); 
                     }} 
-                    className="bg-indigo-600 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95"
+                    className="h-8 px-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase active:scale-95 transition-all"
                   >
-                    <Receipt className="w-4 h-4" /> Recibo
+                    <Receipt className="w-3.5 h-3.5" /> Recibo
                   </button>
                 )}
                 
-                <button onClick={() => onDelete(budget.id_orcamento)} className="p-2.5 text-red-400 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl transition-all ml-auto">
-                  <Trash2 className="w-5 h-5" />
+                {/* Lixeira Discreta no Final */}
+                <button onClick={() => onDelete(budget.id_orcamento)} className="h-8 w-8 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all ml-auto">
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
           </div>
         ))}
+        
+        {filteredBudgets.length === 0 && (
+          <div className="py-20 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-300">
+              <Search className="w-8 h-8" />
+            </div>
+            <p className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">Nenhum registro encontrado</p>
+          </div>
+        )}
       </div>
     </div>
   );
