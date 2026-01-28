@@ -7,6 +7,7 @@ import {
   MessageCircle, 
   FileText,
   CheckCircle,
+  XCircle,
   Share2,
   Loader2,
   Receipt,
@@ -65,9 +66,13 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
 
   const handleWhatsApp = (budget: Budget) => {
     const prof = professional;
-    const profName = prof?.nome_profissional || 'Empresa';
+    const profName = prof?.nome_profissional || 'EMPRESA';
 
     let message = `*📄 ORÇAMENTO PROFISSIONAL*\n`;
+    message += `*${profName.toUpperCase()}*\n`;
+    if (prof?.cpf_cnpj) message += `CNPJ/CPF: ${prof.cpf_cnpj}\n`;
+    message += `----------------------------------\n\n`;
+
     message += `Olá *${budget.cliente.nome_cliente || 'cliente'}*,\n`;
     message += `Seguem os detalhes do seu orçamento:\n\n`;
     
@@ -83,8 +88,6 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
     if (budget.servico.observacoes_servico) message += `\n*📝 OBS:* ${budget.servico.observacoes_servico}\n`;
     
     message += `----------------------------------\n`;
-    message += `*EMPRESA:* ${profName}\n`;
-    if (prof?.cpf_cnpj) message += `*CNPJ/CPF:* ${prof.cpf_cnpj}\n`;
     if (prof?.endereco_profissional) message += `*ENDEREÇO:* ${prof.endereco_profissional}\n`;
     if (prof?.email_profissional) message += `*E-MAIL:* ${prof.email_profissional}\n`;
     if (prof?.telefone_profissional) message += `*CONTATO:* ${prof.telefone_profissional}\n`;
@@ -292,6 +295,26 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                 <button onClick={() => handleShareBudget(budget)} disabled={generatingId === budget.id_orcamento} className="bg-white border-2 border-slate-900 text-slate-900 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95">
                   {generatingId === budget.id_orcamento ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />} PDF
                 </button>
+
+                {/* Botões de Ação para Orçamentos Pendentes */}
+                {budget.status_orcamento === BudgetStatus.PENDENTE && (
+                  <>
+                    <button 
+                      onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.APROVADO)}
+                      className="bg-green-50 text-green-700 border border-green-200 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95 transition-all"
+                    >
+                      <CheckCircle className="w-4 h-4" /> Aprovar
+                    </button>
+                    <button 
+                      onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.RECUSADO)}
+                      className="bg-red-50 text-red-700 border border-red-200 px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs font-black uppercase active:scale-95 transition-all"
+                    >
+                      <XCircle className="w-4 h-4" /> Recusar
+                    </button>
+                  </>
+                )}
+
+                {/* Botão de Recibo para Orçamentos Aprovados */}
                 {budget.status_orcamento === BudgetStatus.APROVADO && (
                   <button 
                     onClick={() => { 
@@ -305,6 +328,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                     <Receipt className="w-4 h-4" /> Recibo
                   </button>
                 )}
+                
                 <button onClick={() => onDelete(budget.id_orcamento)} className="p-2.5 text-red-400 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl transition-all ml-auto">
                   <Trash2 className="w-5 h-5" />
                 </button>

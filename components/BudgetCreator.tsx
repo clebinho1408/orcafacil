@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Mic, 
@@ -293,49 +292,33 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
     if (isGeneratingPDF) return;
     setIsGeneratingPDF(true);
     setPdfBudget(budget);
-    await new Promise(r => setTimeout(r, 1500));
+    await new Promise(r => setTimeout(r, 1200));
     const element = document.getElementById('pdf-content-to-capture');
     if (!element) { setIsGeneratingPDF(false); setPdfBudget(null); return; }
-    
     const opt = {
       margin: 0,
       filename: `Orcamento_${budget.cliente.nome_cliente || 'Cliente'}.pdf`,
       image: { type: 'jpeg', quality: 1.0 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        letterRendering: true,
-        scrollX: 0,
-        scrollY: 0
-      },
+      html2canvas: { scale: 2.5, useCORS: true, letterRendering: true, scrollX: 0, scrollY: 0 },
       jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
-
     try {
       const pdfBlob = await window.html2pdf().from(element).set(opt).output('blob');
       const file = new File([pdfBlob], opt.filename, { type: 'application/pdf' });
-      if (navigator.share) {
-        await navigator.share({ files: [file], title: `Orçamento: ${budget.cliente.nome_cliente}` });
-      } else {
-        const url = URL.createObjectURL(pdfBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = opt.filename;
-        link.click();
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsGeneratingPDF(false);
-      setPdfBudget(null);
-    }
+      if (navigator.share) await navigator.share({ files: [file], title: `Orçamento: ${budget.cliente.nome_cliente}` });
+      else { const url = URL.createObjectURL(pdfBlob); const link = document.createElement('a'); link.href = url; link.download = opt.filename; link.click(); }
+    } catch (err) { console.error(err); } finally { setIsGeneratingPDF(false); setPdfBudget(null); }
   };
 
   const sendWhatsApp = (budget: Budget) => {
     const prof = professional;
-    const profName = prof?.nome_profissional || 'Empresa';
+    const profName = prof?.nome_profissional || 'EMPRESA';
 
     let message = `*📄 ORÇAMENTO PROFISSIONAL*\n`;
+    message += `*${profName.toUpperCase()}*\n`;
+    if (prof.cpf_cnpj) message += `CNPJ/CPF: ${prof.cpf_cnpj}\n`;
+    message += `----------------------------------\n\n`;
+
     message += `Olá *${budget.cliente.nome_cliente}*,\n`;
     message += `Seguem os detalhes do seu orçamento:\n\n`;
     
@@ -357,8 +340,6 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
     if (budget.servico.observacoes_servico) message += `\n*📝 OBS:* ${budget.servico.observacoes_servico}\n`;
     
     message += `----------------------------------\n`;
-    message += `*EMPRESA:* ${profName}\n`;
-    if (prof.cpf_cnpj) message += `*CNPJ/CPF:* ${prof.cpf_cnpj}\n`;
     if (prof.endereco_profissional) message += `*ENDEREÇO:* ${prof.endereco_profissional}\n`;
     if (prof.email_profissional) message += `*E-MAIL:* ${prof.email_profissional}\n`;
     if (prof.telefone_profissional) message += `*CONTATO:* ${prof.telefone_profissional}\n`;

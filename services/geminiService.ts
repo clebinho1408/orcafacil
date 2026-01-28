@@ -31,7 +31,7 @@ export const extractBudgetData = async (text: string): Promise<ExtractedBudget |
       2. Converta metros para "M²". 
       3. Valores como "R$ X.XXX,XX".`,
       config: {
-        thinkingConfig: { thinkingBudget: 0 }, // Prioridade total em velocidade
+        thinkingConfig: { thinkingBudget: 0 },
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -41,8 +41,6 @@ export const extractBudgetData = async (text: string): Promise<ExtractedBudget |
             endereco_cliente: { type: Type.STRING },
             descricao_servico: { type: Type.STRING },
             valor_total: { type: Type.STRING },
-            valor_mao_de_obra: { type: Type.STRING },
-            valor_material: { type: Type.STRING },
             observacoes_servico: { type: Type.STRING },
             forma_pagamento: { type: Type.STRING },
           }
@@ -52,7 +50,6 @@ export const extractBudgetData = async (text: string): Promise<ExtractedBudget |
 
     const data = JSON.parse(response.text || '{}') as ExtractedBudget;
     
-    // Pós-processamento ultra rápido
     if (data.descricao_servico) {
       data.descricao_servico = data.descricao_servico.toUpperCase().replace(/(\d+)\s*(M|MT|METROS|METRO)(?![²2])/gi, '$1M²');
     }
