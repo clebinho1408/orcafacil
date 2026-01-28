@@ -250,7 +250,7 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
       )}
 
       <div className="flex flex-col gap-4 mb-6 px-1">
-        <h2 className="text-2xl font-black uppercase tracking-tighter">Histórico</h2>
+        <h2 className="text-2xl font-black uppercase tracking-tighter text-slate-900">Histórico</h2>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
           <input 
@@ -290,55 +290,60 @@ const BudgetList: React.FC<Props> = ({ budgets, onUpdateStatus, onUpdateBudget, 
                 </div>
               </div>
 
-              {/* Linha de Ações - Alinhada e Discreta */}
-              <div className="flex items-center gap-2 pt-3 border-t border-slate-50">
-                <button onClick={() => handleWhatsApp(budget)} className="h-8 px-3 bg-green-500 text-white rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase active:scale-95 transition-all">
-                  <MessageCircle className="w-3.5 h-3.5 fill-current" /> Whats
-                </button>
-                
-                <button onClick={() => handleShareBudget(budget)} disabled={generatingId === budget.id_orcamento} className="h-8 px-3 bg-slate-900 text-white rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase active:scale-95 transition-all">
-                  {generatingId === budget.id_orcamento ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
-                </button>
-
-                <div className="h-4 w-[1px] bg-slate-100 mx-1" />
-
-                {/* Botões de Status - Pequenos e Discretos */}
-                {budget.status_orcamento === BudgetStatus.PENDENTE && (
-                  <>
-                    <button 
-                      onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.APROVADO)}
-                      className="h-8 px-2 border border-green-100 text-green-600 hover:bg-green-50 rounded-lg flex items-center gap-1 text-[9px] font-black uppercase active:scale-95 transition-all"
-                    >
-                      <CheckCircle className="w-3 h-3" /> Aprovar
-                    </button>
-                    <button 
-                      onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.RECUSADO)}
-                      className="h-8 px-2 border border-red-50 text-red-400 hover:bg-red-50 rounded-lg flex items-center gap-1 text-[9px] font-black uppercase active:scale-95 transition-all"
-                    >
-                      <XCircle className="w-3 h-3" /> Recusar
-                    </button>
-                  </>
-                )}
-
-                {/* Botão de Recibo Discreto */}
-                {budget.status_orcamento === BudgetStatus.APROVADO && (
-                  <button 
-                    onClick={() => { 
-                      setReceiptBudget(budget); 
-                      const totalNum = parseCurrency(budget.valores.valor_total);
-                      const paidNum = parseCurrency(budget.valores.valor_pago_acumulado || '0');
-                      setReceiptValue(formatCurrency(totalNum - paidNum)); 
-                    }} 
-                    className="h-8 px-3 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 rounded-lg flex items-center gap-1.5 text-[10px] font-black uppercase active:scale-95 transition-all"
-                  >
-                    <Receipt className="w-3.5 h-3.5" /> Recibo
+              {/* Container de Ações de Duas Linhas */}
+              <div className="flex flex-col gap-2.5 pt-4 border-t border-slate-50">
+                {/* Linha 1: Comunicação e Exportação */}
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleWhatsApp(budget)} className="h-9 flex-1 bg-green-500 text-white rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase active:scale-95 transition-all">
+                    <MessageCircle className="w-3.5 h-3.5 fill-current" /> Whats
                   </button>
-                )}
-                
-                {/* Lixeira Discreta no Final */}
-                <button onClick={() => onDelete(budget.id_orcamento)} className="h-8 w-8 flex items-center justify-center text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all ml-auto">
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                  
+                  <button onClick={() => handleShareBudget(budget)} disabled={generatingId === budget.id_orcamento} className="h-9 flex-1 bg-slate-900 text-white rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase active:scale-95 transition-all">
+                    {generatingId === budget.id_orcamento ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />} PDF
+                  </button>
+
+                  {budget.status_orcamento === BudgetStatus.APROVADO && (
+                    <button 
+                      onClick={() => { 
+                        setReceiptBudget(budget); 
+                        const totalNum = parseCurrency(budget.valores.valor_total);
+                        const paidNum = parseCurrency(budget.valores.valor_pago_acumulado || '0');
+                        setReceiptValue(formatCurrency(totalNum - paidNum)); 
+                      }} 
+                      className="h-9 flex-1 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase active:scale-95 transition-all"
+                    >
+                      <Receipt className="w-3.5 h-3.5" /> Recibo
+                    </button>
+                  )}
+                </div>
+
+                {/* Linha 2: Gestão de Status e Exclusão */}
+                <div className="flex items-center gap-2">
+                  {budget.status_orcamento === BudgetStatus.PENDENTE && (
+                    <>
+                      <button 
+                        onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.APROVADO)}
+                        className="h-8 px-3 border border-green-100 text-green-600 hover:bg-green-50 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase active:scale-95 transition-all"
+                      >
+                        <CheckCircle className="w-3 h-3" /> Aprovado
+                      </button>
+                      <button 
+                        onClick={() => onUpdateStatus(budget.id_orcamento, BudgetStatus.RECUSADO)}
+                        className="h-8 px-3 border border-red-50 text-red-400 hover:bg-red-50 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase active:scale-95 transition-all"
+                      >
+                        <XCircle className="w-3 h-3" /> Recusado
+                      </button>
+                    </>
+                  )}
+
+                  {/* Botão Excluir alinhado à direita na segunda linha */}
+                  <button 
+                    onClick={() => onDelete(budget.id_orcamento)} 
+                    className="h-8 px-3 border border-slate-100 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg flex items-center gap-1.5 text-[9px] font-black uppercase active:scale-95 transition-all ml-auto"
+                  >
+                    <Trash2 className="w-3 h-3" /> Excluir
+                  </button>
+                </div>
               </div>
             </div>
           </div>
