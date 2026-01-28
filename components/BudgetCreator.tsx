@@ -17,7 +17,8 @@ import {
   ChevronRight,
   Trash2,
   MapPin,
-  Phone
+  Phone,
+  Zap
 } from 'lucide-react';
 import { 
   Budget, 
@@ -171,44 +172,47 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
     if (!transcript.trim()) return;
     handleStopRecording();
     setIsExtracting(true);
-    const data = await extractBudgetData(transcript);
-    setIsExtracting(false);
-
-    if (data) {
-      if (step === 'voice_services') {
-        if (data.descricao_servico && data.valor_total) {
-          setPendingExtraction(data);
-          setShowMultiServiceModal(true);
-        } else {
-          alert("Diga o serviço e o valor para continuar.");
+    
+    try {
+      const data = await extractBudgetData(transcript);
+      if (data) {
+        if (step === 'voice_services') {
+          if (data.descricao_servico && data.valor_total) {
+            setPendingExtraction(data);
+            setShowMultiServiceModal(true);
+          } else {
+            alert("Diga o serviço e o valor para continuar.");
+          }
+        } else if (step === 'voice_client') {
+          setClient(prev => ({ 
+            ...prev, 
+            nome_cliente: (data.nome_cliente || transcript).toUpperCase(),
+            telefone_cliente: data.telefone_cliente || prev.telefone_cliente,
+            endereco_cliente: data.endereco_cliente || prev.endereco_cliente
+          }));
+          setTranscript('');
+          setStep('voice_obs');
+        } else if (step === 'voice_obs') {
+          setServiceMeta(prev => ({ ...prev, observacoes_servico: transcript }));
+          setTranscript('');
+          setStep('details');
         }
-      } else if (step === 'voice_client') {
-        setClient(prev => ({ 
-          ...prev, 
-          nome_cliente: (data.nome_cliente || transcript).toUpperCase(),
-          telefone_cliente: data.telefone_cliente || prev.telefone_cliente,
-          endereco_cliente: data.endereco_cliente || prev.endereco_cliente
-        }));
-        setTranscript('');
-        setStep('voice_obs');
-      } else if (step === 'voice_obs') {
-        setServiceMeta(prev => ({ ...prev, observacoes_servico: transcript }));
-        setTranscript('');
-        setStep('details');
-      }
-    } else { 
-      // Fallback e mensagem de erro mais detalhada
-      if (step === 'voice_client') {
-        setClient(prev => ({ ...prev, nome_cliente: transcript.toUpperCase() }));
-        setTranscript('');
-        setStep('voice_obs');
-      } else if (step === 'voice_obs') {
-        setServiceMeta(prev => ({ ...prev, observacoes_servico: transcript }));
-        setTranscript('');
-        setStep('details');
       } else {
-        alert("Não conseguimos processar via IA. Verifique se a chave do Gemini está configurada no Vercel ou tente falar mais claramente."); 
+        // Fallback rápido
+        if (step === 'voice_client') {
+          setClient(prev => ({ ...prev, nome_cliente: transcript.toUpperCase() }));
+          setTranscript('');
+          setStep('voice_obs');
+        } else if (step === 'voice_obs') {
+          setServiceMeta(prev => ({ ...prev, observacoes_servico: transcript }));
+          setTranscript('');
+          setStep('details');
+        } else {
+          alert("Ops, não consegui entender o serviço. Tente falar novamente.");
+        }
       }
+    } finally {
+      setIsExtracting(false);
     }
   };
 
@@ -393,7 +397,9 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
             </div>
           )}
           <div className="text-center mb-2 px-6">
-            <h2 className="text-xl font-black mb-0.5 text-slate-900 leading-tight">{isRecording ? "Pode falar..." : "Toque para falar"}</h2>
+            <h2 className="text-xl font-black mb-0.5 text-slate-900 leading-tight">
+              {isExtracting ? "IA está pensando..." : (isRecording ? "Pode falar..." : "Toque para falar")}
+            </h2>
             <p className="text-slate-500 text-[10px] max-w-xs mx-auto font-bold uppercase tracking-tight">
               {step === 'voice_services' && "Diga o serviço e o valor (Ex: Pintura 500 reais)"}
               {step === 'voice_client' && "Diga o nome do cliente (pode incluir fone e endereço)"}
@@ -403,8 +409,13 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
           
           <div className="relative mb-4 flex-shrink-0">
             {isRecording && <div className="absolute inset-0 bg-red-500/20 rounded-full animate-ping" />}
-            <button onClick={toggleRecording} className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${isRecording ? 'bg-red-500' : 'bg-indigo-600 hover:bg-indigo-700'}`}>
-              {isRecording ? <Square className="text-white w-8 h-8 fill-current" /> : <Mic className="text-white w-10 h-10" />}
+            {isExtracting && <div className="absolute inset-0 bg-indigo-500/20 rounded-full animate-pulse scale-110" />}
+            
+            <button 
+              onClick={isExtracting ? undefined : toggleRecording} 
+              className={`w-24 h-24 rounded-full flex items-center justify-center shadow-2xl transition-all transform active:scale-95 ${isExtracting ? 'bg-indigo-400 cursor-wait' : (isRecording ? 'bg-red-500' : 'bg-indigo-600 hover:bg-indigo-700')}`}
+            >
+              {isExtracting ? <Zap className="text-white w-8 h-8 animate-bounce fill-current" /> : (isRecording ? <Square className="text-white w-8 h-8 fill-current" /> : <Mic className="text-white w-10 h-10" />)}
             </button>
           </div>
 
@@ -414,16 +425,30 @@ const BudgetCreator: React.FC<Props> = ({ professional, onSave, nextSequence }) 
                   className="w-full h-full bg-transparent outline-none resize-none text-sm font-medium" 
                   value={transcript} 
                   onChange={(e) => setTranscript(e.target.value)} 
-                  placeholder="Sua voz aparecerá aqui..." 
-                  disabled={isRecording} 
+                  placeholder={isExtracting ? "Processando informações instantaneamente..." : "Sua voz aparecerá aqui..."} 
+                  disabled={isRecording || isExtracting} 
                />
             </div>
           </div>
           
           <div className="flex flex-col w-[90%] gap-2 shrink-0">
             {!isRecording && transcript && (
-              <button onClick={handleProcessWithIA} disabled={isExtracting} className="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 active:scale-95 shadow-xl">
-                {isExtracting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>PROCESSAR <ArrowRight className="w-4 h-4" /></>}
+              <button 
+                onClick={handleProcessWithIA} 
+                disabled={isExtracting} 
+                className={`w-full text-white py-4 rounded-xl font-black text-sm flex items-center justify-center gap-2 active:scale-95 shadow-xl transition-all ${isExtracting ? 'bg-indigo-400' : 'bg-indigo-600'}`}
+              >
+                {isExtracting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>PROCESSANDO...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>CONTINUAR AGORA</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             )}
             
