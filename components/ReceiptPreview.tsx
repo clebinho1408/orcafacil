@@ -128,7 +128,7 @@ const ReceiptPreview: React.FC<Props> = ({ budget, professional, value }) => {
             <span>{professional.telefone_profissional}</span>
             <span>{professional.email_profissional}</span>
           </div>
-          <p className="opacity-40 tracking-[0.4em]">ORÇA FÁCIL</p>
+          <p className="opacity-40 tracking-[0.4em]">ORÇA VOZ</p>
         </div>
       </div>
     </div>

@@ -118,10 +118,10 @@ const ProfessionalForm: React.FC<Props> = ({ initialData, onSave }) => {
             </label>
             <input 
               required
-              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium"
+              className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all font-medium uppercase"
               value={formData.nome_profissional}
-              onChange={e => setFormData({ ...formData, nome_profissional: e.target.value })}
-              placeholder="Ex: João Pinturas"
+              onChange={e => setFormData({ ...formData, nome_profissional: e.target.value.toUpperCase() })}
+              placeholder="EX: JOÃO PINTURAS"
             />
           </div>
 

@@ -41,7 +41,7 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
       <div className="flex justify-between items-start mb-8 border-b-2 border-black pb-6 shrink-0">
         <div className="flex items-center gap-6">
           {prof?.logo_profissional && (
-            <div className="h-20 w-20 shrink-0 flex items-center justify-center">
+            <div className="h-24 w-24 shrink-0 flex items-center justify-center">
               <img src={prof.logo_profissional} alt="Logo" className="max-h-full max-w-full object-contain" />
             </div>
           )}
@@ -145,7 +145,7 @@ const BudgetPreview: React.FC<Props> = ({ budget }) => {
             <span className="flex items-center gap-1">{prof?.telefone_profissional}</span>
             <span className="flex items-center gap-1">{prof?.email_profissional}</span>
           </div>
-          <p className="opacity-40 tracking-[0.4em] text-[10px]">ORÇA FÁCIL</p>
+          <p className="opacity-40 tracking-[0.4em] text-[10px]">ORÇA VOZ</p>
         </div>
       </div>
     </div>

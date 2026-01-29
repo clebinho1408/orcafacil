@@ -77,7 +77,7 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
       <div className="w-full max-w-md space-y-6 my-8">
         <div className="text-center flex flex-col items-center">
           <Logo className="w-20 h-20 mb-4 shadow-2xl rounded-2xl" />
-          <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">ORÇA FÁCIL</h1>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tighter uppercase leading-none">ORÇA VOZ</h1>
           <p className="text-slate-500 font-bold uppercase tracking-widest text-[9px] mt-2">Orçamento gerado por Voz</p>
         </div>
 
@@ -146,10 +146,10 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
                     <Building2 className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                     <input 
                       required
-                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-medium"
-                      placeholder="Ex: João Pinturas"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-medium uppercase"
+                      placeholder="EX: JOÃO PINTURAS"
                       value={formData.nome_profissional}
-                      onChange={e => setFormData({...formData, nome_profissional: e.target.value})}
+                      onChange={e => setFormData({...formData, nome_profissional: e.target.value.toUpperCase()})}
                     />
                   </div>
                 </div>

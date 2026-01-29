@@ -174,7 +174,7 @@ const App: React.FC = () => {
             <Logo className="w-10 h-10" />
             <div>
               <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
-                ORÇA FÁCIL
+                ORÇA VOZ
               </h1>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Orçamento gerado por Voz</p>
             </div>
