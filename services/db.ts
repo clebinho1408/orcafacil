@@ -30,11 +30,39 @@ export const db = {
       if (result.length === 0) throw new Error("Usuário não encontrado.");
       
       const user = result[0] as User;
-      // Nota: Em um app real, use bcrypt. Aqui estamos fazendo comparação direta para simplicidade do exemplo.
       if (user.password !== pass) throw new Error("Senha incorreta.");
 
       localStorage.setItem('orca_voz_user_id', user.id);
       return user;
+    } catch (e: any) {
+      throw new Error(e.message);
+    }
+  },
+
+  resetPassword: async (email: string, phone: string, newPass: string): Promise<void> => {
+    if (!sql) throw new Error("Banco de dados não configurado.");
+    
+    try {
+      // Verifica se existe um perfil que combine email e telefone
+      const result = await sql`
+        SELECT id FROM profiles 
+        WHERE email_profissional = ${email.toLowerCase()} 
+        AND telefone_profissional = ${phone} 
+        LIMIT 1
+      `;
+
+      if (result.length === 0) {
+        throw new Error("Dados de validação incorretos. Verifique seu e-mail e telefone de cadastro.");
+      }
+
+      const userId = result[0].id;
+
+      // Atualiza a senha
+      await sql`
+        UPDATE profiles 
+        SET password = ${newPass} 
+        WHERE id = ${userId}
+      `;
     } catch (e: any) {
       throw new Error(e.message);
     }
@@ -80,8 +108,6 @@ export const db = {
     if (!sql) throw new Error("Banco de dados não configurado");
     
     try {
-      // Construção dinâmica simples para UPDATE (Neon SQL exige cautela com strings)
-      // Para manter a segurança, vamos atualizar apenas os campos permitidos um a um ou via campos fixos
       await sql`
         UPDATE profiles SET
           nome_profissional = COALESCE(${updates.nome_profissional}, nome_profissional),
@@ -142,7 +168,6 @@ export const db = {
   updateBudget: async (id: string, userId: string, updates: Partial<Budget>): Promise<void> => {
     if (!sql) return;
     try {
-      // Para JSONB updates no Postgres, o ideal é atualizar a coluna inteira no nosso caso simplificado
       if (updates.valores) {
         await sql`UPDATE budgets SET valores = ${JSON.stringify(updates.valores)} WHERE id_orcamento = ${id} AND user_id = ${userId}`;
       }

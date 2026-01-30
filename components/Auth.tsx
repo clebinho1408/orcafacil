@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, ChevronLeft, CheckCircle2, Settings, Globe, Database, Phone, FileDigit } from 'lucide-react';
+import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, ChevronLeft, CheckCircle2, Settings, Globe, Database, Phone, FileDigit, ShieldCheck } from 'lucide-react';
 import { User } from '../types';
 import Logo from './Logo';
 import { db } from '../services/db';
@@ -12,7 +12,7 @@ interface Props {
 }
 
 const Auth: React.FC<Props> = ({ onLogin }) => {
-  const [view, setView] = useState<'login' | 'register' | 'manual_config'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'manual_config' | 'forgot_password'>('login');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
@@ -39,7 +39,6 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Se não estiver configurado, forçamos a config manual antes de qualquer ação
     if (!isConfigured) {
       setError("Por favor, configure a conexão com o banco de dados antes de continuar.");
       setView('manual_config');
@@ -71,6 +70,10 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
         await db.register(newUser);
         setSuccessMsg('Conta criada com sucesso!');
         setTimeout(() => setView('login'), 1500);
+      } else if (view === 'forgot_password') {
+        await db.resetPassword(formData.email, formData.telefone_profissional, formData.password);
+        setSuccessMsg('Senha alterada com sucesso! Você já pode entrar.');
+        setTimeout(() => setView('login'), 2000);
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao processar. Verifique sua conexão.');
@@ -83,7 +86,6 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
     <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 animate-in fade-in duration-700 overflow-y-auto">
       <div className="w-full max-w-md space-y-6 my-8 relative">
         
-        {/* Botão de Configuração Discreto */}
         <button 
           onClick={() => setView('manual_config')}
           className="absolute -top-12 right-0 p-3 text-slate-300 hover:text-indigo-600 transition-colors"
@@ -125,6 +127,93 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
                 </button>
                 <button type="button" onClick={() => setView('login')} className="w-full py-2 text-slate-400 font-black text-[9px] uppercase">
                   Voltar
+                </button>
+              </form>
+            </div>
+          ) : view === 'forgot_password' ? (
+            <div className="animate-in slide-in-from-right-4">
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <ShieldCheck className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-lg font-black text-slate-900 uppercase">Recuperar Acesso</h2>
+                </div>
+                <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">Valide seu telefone para criar uma nova senha</p>
+              </div>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg flex items-center gap-2 text-red-600">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <p className="text-[10px] font-bold uppercase">{error}</p>
+                </div>
+              )}
+
+              {successMsg && (
+                <div className="mb-4 p-4 bg-green-50 border border-green-100 rounded-xl flex items-start gap-3 text-green-700">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold uppercase leading-tight">{successMsg}</p>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase text-slate-400 ml-1">Seu E-mail</label>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input 
+                      required 
+                      type="email" 
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium" 
+                      placeholder="seu@email.com" 
+                      value={formData.email} 
+                      onChange={e => setFormData({...formData, email: e.target.value})} 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase text-slate-400 ml-1">Telefone / Whats de Cadastro</label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input 
+                      required
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium" 
+                      placeholder="(00) 00000-0000" 
+                      value={formData.telefone_profissional} 
+                      onChange={e => setFormData({...formData, telefone_profissional: formatPhone(e.target.value)})} 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[9px] font-black uppercase text-slate-400 ml-1">Nova Senha</label>
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                    <input 
+                      required 
+                      type="password" 
+                      minLength={6} 
+                      className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium" 
+                      placeholder="Nova Senha" 
+                      value={formData.password} 
+                      onChange={e => setFormData({...formData, password: e.target.value})} 
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={isLoading} 
+                  className="w-full bg-[#2B59C3] text-white py-4 rounded-xl font-black text-xs shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-all mt-4 disabled:opacity-70 uppercase tracking-widest"
+                >
+                  {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'REDEFINIR SENHA'}
+                </button>
+
+                <button 
+                  type="button" 
+                  onClick={() => setView('login')}
+                  className="w-full py-2 text-slate-400 font-black text-[9px] uppercase"
+                >
+                  Voltar para login
                 </button>
               </form>
             </div>
@@ -189,31 +278,30 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
                       </div>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase text-slate-400 ml-1">CPF ou CNPJ</label>
-                        <div className="relative">
-                          <FileDigit className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                          <input 
-                            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium" 
-                            placeholder="00.000..." 
-                            value={formData.cpf_cnpj} 
-                            onChange={e => setFormData({...formData, cpf_cnpj: formatCpfCnpj(e.target.value)})} 
-                          />
-                        </div>
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase text-slate-400 ml-1">CPF ou CNPJ</label>
+                      <div className="relative">
+                        <FileDigit className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                        <input 
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium" 
+                          placeholder="00.000..." 
+                          value={formData.cpf_cnpj} 
+                          onChange={e => setFormData({...formData, cpf_cnpj: formatCpfCnpj(e.target.value)})} 
+                        />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase text-slate-400 ml-1">Telefone / Whats</label>
-                        <div className="relative">
-                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                          <input 
-                            required
-                            className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium" 
-                            placeholder="(00) 00000..." 
-                            value={formData.telefone_profissional} 
-                            onChange={e => setFormData({...formData, telefone_profissional: formatPhone(e.target.value)})} 
-                          />
-                        </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <label className="text-[9px] font-black uppercase text-slate-400 ml-1">Telefone / Whats</label>
+                      <div className="relative">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
+                        <input 
+                          required
+                          className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-lg text-xs font-medium" 
+                          placeholder="(00) 00000..." 
+                          value={formData.telefone_profissional} 
+                          onChange={e => setFormData({...formData, telefone_profissional: formatPhone(e.target.value)})} 
+                        />
                       </div>
                     </div>
                   </>
@@ -249,6 +337,16 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
                     />
                   </div>
                 </div>
+
+                {view === 'login' && (
+                  <button 
+                    type="button" 
+                    onClick={() => { setView('forgot_password'); setError(null); }}
+                    className="text-[10px] font-bold text-indigo-600 uppercase tracking-widest hover:underline text-right w-full block mt-1"
+                  >
+                    Esqueci minha senha
+                  </button>
+                )}
 
                 <button 
                   type="submit" 
