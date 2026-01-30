@@ -1,9 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
-import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, RefreshCw, ChevronLeft, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Building2, ArrowRight, Loader2, AlertCircle, ChevronLeft, CheckCircle2, Settings } from 'lucide-react';
 import { User } from '../types';
 import Logo from './Logo';
 import { db } from '../services/db';
+import { isConfigured, missingVars } from '../services/supabase';
 import { formatCpfCnpj, formatPhone, isValidCpfCnpj } from '../services/utils';
 
 interface Props {
@@ -29,10 +30,19 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
     if (window.location.hash && window.location.hash.includes('type=recovery')) {
       setView('reset_password');
     }
+
+    // Se não estiver configurado, exibe erro imediato
+    if (!isConfigured) {
+      setError(`SUPABASE NÃO CONFIGURADO. Adicione as variáveis: ${missingVars.join(', ')} na Vercel/Ambiente.`);
+    }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isConfigured) {
+      setError("Sistema indisponível: Variáveis do Supabase faltando.");
+      return;
+    }
     
     setIsLoading(true);
     setError(null);
@@ -56,17 +66,18 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
           endereco_profissional: '',
         };
         await db.register(newUser);
-        setSuccessMsg('Cadastro realizado! Verifique seu e-mail (e a pasta SPAM) para confirmar a conta.');
+        setSuccessMsg('Cadastro realizado! Verifique seu e-mail para confirmar a conta.');
       } else if (view === 'forgot') {
         await db.resetPassword(formData.email);
-        setSuccessMsg('Link de recuperação enviado! Verifique seu e-mail e SPAM.');
+        setSuccessMsg('Link de recuperação enviado! Verifique seu e-mail.');
       } else if (view === 'reset_password') {
         await db.updatePassword(formData.password);
-        setSuccessMsg('Senha atualizada com sucesso! Você já pode entrar no sistema.');
+        setSuccessMsg('Senha atualizada! Faça login agora.');
         setTimeout(() => setView('login'), 2000);
       }
     } catch (err: any) {
-      setError(err.message || 'Erro inesperado.');
+      console.error("Auth Error:", err);
+      setError(err.message || 'Falha na autenticação. Verifique os dados.');
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +92,14 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
           <p className="text-slate-500 font-bold uppercase tracking-widest text-[9px] mt-2">Orçamento gerado por Voz</p>
         </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100">
+        <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 relative">
+          {!isConfigured && (
+            <div className="absolute -top-3 left-6 right-6 bg-red-600 text-white text-[9px] font-black py-1.5 px-3 rounded-full flex items-center gap-2 shadow-lg animate-bounce z-50">
+              <Settings className="w-3 h-3" />
+              CONFIGURAÇÃO PENDENTE NO PAINEL VERCEL
+            </div>
+          )}
+
           {(view === 'login' || view === 'register') && (
             <div className="flex bg-slate-100 p-1 rounded-xl mb-6">
               <button 
@@ -126,7 +144,7 @@ const Auth: React.FC<Props> = ({ onLogin }) => {
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-100 rounded-lg flex items-start gap-2 text-red-600">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <p className="text-[10px] font-bold uppercase tracking-tight">{error}</p>
+              <p className="text-[10px] font-bold uppercase tracking-tight leading-tight">{error}</p>
             </div>
           )}
 
