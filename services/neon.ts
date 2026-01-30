@@ -15,13 +15,45 @@ const getEnv = (name: string): string | undefined => {
   return undefined;
 };
 
-// URL de conexão completa do Neon (postgresql://user:pass@host/db)
-let databaseUrl = localStorage.getItem(STORAGE_KEY_DATABASE_URL) || getEnv('VITE_NEON_DATABASE_URL');
+/**
+ * Limpa a URL de conexão do Neon caso o usuário tenha colado o comando psql inteiro
+ * Ex: psql 'postgresql://user:pass@host/db' -> postgresql://user:pass@host/db
+ */
+const sanitizeUrl = (url: string | null): string | null => {
+  if (!url) return null;
+  let cleaned = url.trim();
+  
+  // Remove o prefixo "psql " se existir
+  cleaned = cleaned.replace(/^psql\s+/, '');
+  
+  // Extrai o conteúdo dentro de aspas simples ou duplas se houver
+  const match = cleaned.match(/['"](postgresql?:\/\/.*?)['"]/);
+  if (match) {
+    cleaned = match[1];
+  } else {
+    // Remove aspas remanescentes e espaços
+    cleaned = cleaned.replace(/['"]/g, '').trim();
+  }
+  
+  return cleaned;
+};
 
-export const isConfigured = !!databaseUrl;
+const rawUrl = localStorage.getItem(STORAGE_KEY_DATABASE_URL) || getEnv('VITE_NEON_DATABASE_URL');
+const databaseUrl = sanitizeUrl(rawUrl || null);
 
-// O driver neon() retorna uma função para executar SQL via HTTP
-export const sql = isConfigured ? neon(databaseUrl!) : null;
+export const isConfigured = !!databaseUrl && databaseUrl.startsWith('postgres');
+
+// Inicialização segura para evitar tela branca por erro de parsing da URL
+let sqlClient = null;
+if (isConfigured) {
+  try {
+    sqlClient = neon(databaseUrl!);
+  } catch (e) {
+    console.error("Erro ao inicializar driver Neon:", e);
+  }
+}
+
+export const sql = sqlClient;
 
 export const configureNeon = (url: string) => {
   localStorage.setItem(STORAGE_KEY_DATABASE_URL, url.trim());
