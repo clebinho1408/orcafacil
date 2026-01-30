@@ -15,7 +15,6 @@ import Auth from './components/Auth';
 import Logo from './components/Logo';
 import ConfirmModal from './components/ConfirmModal';
 import { db } from './services/db';
-import { supabase } from './services/supabase';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'create' | 'history' | 'settings'>('create');
@@ -28,32 +27,20 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const user = await db.getCurrentUser();
-      if (user) {
-        setCurrentUser(user);
-        loadUserData(user.id);
+      try {
+        const user = await db.getCurrentUser();
+        if (user) {
+          setCurrentUser(user);
+          await loadUserData(user.id);
+        }
+      } catch (e) {
+        console.error("Erro ao verificar sessão:", e);
+      } finally {
+        setIsAuthChecking(false);
       }
-      setIsAuthChecking(false);
     };
 
     checkSession();
-
-    if (supabase) {
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          const user = await db.getCurrentUser();
-          if (user) {
-            setCurrentUser(user);
-            loadUserData(user.id);
-          }
-        } else if (event === 'SIGNED_OUT') {
-          setCurrentUser(null);
-          setBudgets([]);
-        }
-      });
-
-      return () => subscription.unsubscribe();
-    }
   }, []);
 
   const loadUserData = async (userId: string) => {
@@ -75,8 +62,8 @@ const App: React.FC = () => {
     loadUserData(user.id);
   };
 
-  const performLogout = async () => {
-    if (supabase) await supabase.auth.signOut();
+  const performLogout = () => {
+    db.logout();
     setCurrentUser(null);
     setActiveTab('create');
   };
@@ -84,10 +71,10 @@ const App: React.FC = () => {
   const saveProfessional = async (data: any) => {
     if (!currentUser) return;
     const updatedUser = { ...currentUser, ...data };
-    setCurrentUser(updatedUser);
     
     try {
       await db.updateProfile(currentUser.id, data);
+      setCurrentUser(updatedUser);
       alert('Dados atualizados com sucesso!');
     } catch (e: any) {
       alert(`Erro ao atualizar perfil: ${e.message}`);
@@ -163,7 +150,7 @@ const App: React.FC = () => {
         onClose={() => setShowLogoutModal(false)}
         onConfirm={performLogout}
         title="Deseja Sair?"
-        description="Você precisará entrar com seu e-mail e senha novamente para acessar seus orçamentos."
+        description="Você precisará entrar com seu e-mail e senha novamente."
         confirmLabel="Sair Agora"
         variant="danger"
       />
@@ -176,7 +163,7 @@ const App: React.FC = () => {
               <h1 className="text-2xl font-black text-slate-900 tracking-tight leading-none">
                 ORÇA VOZ
               </h1>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Orçamento gerado por Voz</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Neon Cloud Database</p>
             </div>
           </div>
           <button 
@@ -192,7 +179,7 @@ const App: React.FC = () => {
         {isLoadingData ? (
           <div className="h-full flex flex-col items-center justify-center gap-4 text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin" />
-            <p className="font-bold text-xs uppercase tracking-widest">Sincronizando Nuvem...</p>
+            <p className="font-bold text-xs uppercase tracking-widest text-center">Conectando ao Neon...</p>
           </div>
         ) : (
           <>
